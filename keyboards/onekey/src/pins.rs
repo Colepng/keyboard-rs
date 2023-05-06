@@ -8,6 +8,8 @@ use rp_pico::hal::gpio::Readable;
 use embedded_hal::digital::v2::InputPin;
 use embedded_hal::digital::v2::OutputPin;
 
+// could add another enum to wrap the other enum and use a match statment to get the list of enums
+// so the user only days which pins so they dont have to see the annoying stuff
 #[derive(PartialEq)]
 pub enum PinMode {
     High,
