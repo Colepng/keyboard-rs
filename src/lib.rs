@@ -2,9 +2,9 @@
 #![no_main]
 
 pub mod config;
-mod pins;
+mod keyboard;
 use config::*;
-use pins::*;
+use keyboard::*;
 
 use cortex_m::prelude::{_embedded_hal_watchdog_Watchdog, _embedded_hal_watchdog_WatchdogEnable};
 use fugit::ExtU32;
@@ -31,8 +31,7 @@ static mut USB_BUS: Option<UsbBusAllocator<hal::usb::UsbBus>> = None;
 /// The USB Human Interface Device Driver (shared with the interrupt).
 static mut USB_HID: Option<hid_class::HIDClass<hal::usb::UsbBus>> = None;
 
-#[entry]
-fn main() -> ! {
+pub fn init() -> ! {
     // setup peripherals
     let mut pac = hal::pac::Peripherals::take().unwrap();
 

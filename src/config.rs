@@ -1,4 +1,4 @@
-use crate::pins::{InputPins, OutputPins};
+use crate::keyboard::{InputPins, OutputPins};
 
 pub enum DiodeDirection {
     Col2Row,
@@ -7,10 +7,7 @@ pub enum DiodeDirection {
 
 pub const DIODE_DIRECTION: bool = false;
 
-pub const KEYS: [[u8; 3]; 2] = [
-    [0x04, 0x05, 0x06], 
-    [0x07, 0x08, 0x09],
-];
+pub const KEYS: [[u8; 3]; 2] = [[0x04, 0x05, 0x06], [0x07, 0x08, 0x09]];
 
 pub struct Matrix {
     pub cols: [OutputPins; 3],
