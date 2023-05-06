@@ -141,6 +141,42 @@ impl OutputPins {
     }
 }
 
+impl InputPins {
+    fn is_high(&self) -> bool {
+        match self {
+            Self::GP28(pin) => {return pin.is_high().unwrap();}
+            Self::GP27(pin) => {return pin.is_high().unwrap();}
+            Self::GP26(pin) => {return pin.is_high().unwrap();}
+            Self::GP25(pin) => {return pin.is_high().unwrap();}
+            Self::GP24(pin) => {return pin.is_high().unwrap();}
+            Self::GP23(pin) => {return pin.is_high().unwrap();}
+            Self::GP22(pin) => {return pin.is_high().unwrap();}
+            Self::GP21(pin) => {return pin.is_high().unwrap();}
+            Self::GP20(pin) => {return pin.is_high().unwrap();}
+            Self::GP19(pin) => {return pin.is_high().unwrap();}
+            Self::GP18(pin) => {return pin.is_high().unwrap();}
+            Self::GP17(pin) => {return pin.is_high().unwrap();}
+            Self::GP16(pin) => {return pin.is_high().unwrap();}
+            Self::GP15(pin) => {return pin.is_high().unwrap();}
+            Self::GP14(pin) => {return pin.is_high().unwrap();}
+            Self::GP13(pin) => {return pin.is_high().unwrap();}
+            Self::GP12(pin) => {return pin.is_high().unwrap();}
+            Self::GP11(pin) => {return pin.is_high().unwrap();}
+            Self::GP10(pin) => {return pin.is_high().unwrap();}
+            Self::GP9(pin) => {return pin.is_high().unwrap();}
+            Self::GP8(pin) => {return pin.is_high().unwrap();}
+            Self::GP7(pin) => {return pin.is_high().unwrap();}
+            Self::GP6(pin) => {return pin.is_high().unwrap();}
+            Self::GP5(pin) => {return pin.is_high().unwrap();}
+            Self::GP4(pin) => {return pin.is_high().unwrap();}
+            Self::GP3(pin) => {return pin.is_high().unwrap();}
+            Self::GP2(pin) => {return pin.is_high().unwrap();}
+            Self::GP1(pin) => {return pin.is_high().unwrap();}
+            Self::GP0(pin) => {return pin.is_high().unwrap();}
+        }
+    }
+}
+
 
 #[entry]
 fn main() -> ! {
@@ -251,19 +287,9 @@ fn main() -> ! {
             for (row, pin) in rows.iter_mut().enumerate() {
                 pin.set_output_pin_mode(PinMode::High);
                 for (col, pin) in cols.iter().enumerate() {
-                    match pin {
-                        InputPins::GP15(x) => {
-                            if index <= 6 && x.is_high().unwrap() {
-                                keycodes[index] = keys[row][col];
-                                index += 1;
-                            }
-                        }
-                        InputPins::GP16(x) => {
-                            if index <= 6 && x.is_high().unwrap() {
-                                keycodes[index] = keys[row][col];
-                                index += 1;
-                            }
-                        }
+                    if index <= 6 && pin.is_high() {
+                        keycodes[index] = keys[row][col];
+                        index += 1;
                     }
                 }
                 pin.set_output_pin_mode(PinMode::Low);
@@ -295,19 +321,9 @@ fn main() -> ! {
             for (col, pin) in cols.iter_mut().enumerate() {
                 pin.set_output_pin_mode(PinMode::High);
                 for (row, pin) in rows.iter().enumerate() {
-                    match pin {
-                        InputPins::GP15(x) => {
-                            if index <= 6 && x.is_high().unwrap() {
-                                keycodes[index] = keys[row][col];
-                                index += 1;
-                            }
-                        }
-                        InputPins::GP16(x) => {
-                            if index <= 6 && x.is_high().unwrap() {
-                                keycodes[index] = keys[row][col];
-                                index += 1;
-                            }
-                        }
+                    if index <= 6 && pin.is_high() {
+                        keycodes[index] = keys[row][col];
+                        index += 1;
                     }
                 }
                 pin.set_output_pin_mode(PinMode::Low);
