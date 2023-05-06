@@ -1,6 +1,6 @@
-use crate::pins::{OutputPins, InputPins};
+use crate::pins::{InputPins, OutputPins};
 
-pub enum DiodeDirection{
+pub enum DiodeDirection {
     Col2Row,
     Row2Col,
 }
@@ -19,8 +19,8 @@ pub struct Matrix {
 
 impl Matrix {
     pub fn new(pins: rp_pico::Pins) -> Self {
-        Matrix { 
-            cols: [ 
+        Matrix {
+            cols: [
                 OutputPins::GP28(pins.gpio28.into_readable_output()),
                 OutputPins::GP26(pins.gpio26.into_readable_output()),
                 OutputPins::GP17(pins.gpio17.into_readable_output()),

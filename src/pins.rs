@@ -85,35 +85,209 @@ pub enum InputPins {
 impl OutputPins {
     pub fn set_output_pin_mode(&mut self, mode: PinMode) {
         match self {
-            Self::GP28(pin) => {if mode == PinMode::High {pin.set_high().unwrap()} else {pin.set_low().unwrap()}}
-            Self::GP27(pin) => {if mode == PinMode::High {pin.set_high().unwrap()} else {pin.set_low().unwrap()}}
-            Self::GP26(pin) => {if mode == PinMode::High {pin.set_high().unwrap()} else {pin.set_low().unwrap()}}
-            Self::GP25(pin) => {if mode == PinMode::High {pin.set_high().unwrap()} else {pin.set_low().unwrap()}}
-            Self::GP24(pin) => {if mode == PinMode::High {pin.set_high().unwrap()} else {pin.set_low().unwrap()}}
-            Self::GP23(pin) => {if mode == PinMode::High {pin.set_high().unwrap()} else {pin.set_low().unwrap()}}
-            Self::GP22(pin) => {if mode == PinMode::High {pin.set_high().unwrap()} else {pin.set_low().unwrap()}}
-            Self::GP21(pin) => {if mode == PinMode::High {pin.set_high().unwrap()} else {pin.set_low().unwrap()}}
-            Self::GP20(pin) => {if mode == PinMode::High {pin.set_high().unwrap()} else {pin.set_low().unwrap()}}
-            Self::GP19(pin) => {if mode == PinMode::High {pin.set_high().unwrap()} else {pin.set_low().unwrap()}}
-            Self::GP18(pin) => {if mode == PinMode::High {pin.set_high().unwrap()} else {pin.set_low().unwrap()}}
-            Self::GP17(pin) => {if mode == PinMode::High {pin.set_high().unwrap()} else {pin.set_low().unwrap()}}
-            Self::GP16(pin) => {if mode == PinMode::High {pin.set_high().unwrap()} else {pin.set_low().unwrap()}}
-            Self::GP15(pin) => {if mode == PinMode::High {pin.set_high().unwrap()} else {pin.set_low().unwrap()}}
-            Self::GP14(pin) => {if mode == PinMode::High {pin.set_high().unwrap()} else {pin.set_low().unwrap()}}
-            Self::GP13(pin) => {if mode == PinMode::High {pin.set_high().unwrap()} else {pin.set_low().unwrap()}}
-            Self::GP12(pin) => {if mode == PinMode::High {pin.set_high().unwrap()} else {pin.set_low().unwrap()}}
-            Self::GP11(pin) => {if mode == PinMode::High {pin.set_high().unwrap()} else {pin.set_low().unwrap()}}
-            Self::GP10(pin) => {if mode == PinMode::High {pin.set_high().unwrap()} else {pin.set_low().unwrap()}}
-            Self::GP9(pin) => {if mode == PinMode::High {pin.set_high().unwrap()} else {pin.set_low().unwrap()}}
-            Self::GP8(pin) => {if mode == PinMode::High {pin.set_high().unwrap()} else {pin.set_low().unwrap()}}
-            Self::GP7(pin) => {if mode == PinMode::High {pin.set_high().unwrap()} else {pin.set_low().unwrap()}}
-            Self::GP6(pin) => {if mode == PinMode::High {pin.set_high().unwrap()} else {pin.set_low().unwrap()}}
-            Self::GP5(pin) => {if mode == PinMode::High {pin.set_high().unwrap()} else {pin.set_low().unwrap()}}
-            Self::GP4(pin) => {if mode == PinMode::High {pin.set_high().unwrap()} else {pin.set_low().unwrap()}}
-            Self::GP3(pin) => {if mode == PinMode::High {pin.set_high().unwrap()} else {pin.set_low().unwrap()}}
-            Self::GP2(pin) => {if mode == PinMode::High {pin.set_high().unwrap()} else {pin.set_low().unwrap()}}
-            Self::GP1(pin) => {if mode == PinMode::High {pin.set_high().unwrap()} else {pin.set_low().unwrap()}}
-            Self::GP0(pin) => {if mode == PinMode::High {pin.set_high().unwrap()} else {pin.set_low().unwrap()}}
+            Self::GP28(pin) => {
+                if mode == PinMode::High {
+                    pin.set_high().unwrap()
+                } else {
+                    pin.set_low().unwrap()
+                }
+            }
+            Self::GP27(pin) => {
+                if mode == PinMode::High {
+                    pin.set_high().unwrap()
+                } else {
+                    pin.set_low().unwrap()
+                }
+            }
+            Self::GP26(pin) => {
+                if mode == PinMode::High {
+                    pin.set_high().unwrap()
+                } else {
+                    pin.set_low().unwrap()
+                }
+            }
+            Self::GP25(pin) => {
+                if mode == PinMode::High {
+                    pin.set_high().unwrap()
+                } else {
+                    pin.set_low().unwrap()
+                }
+            }
+            Self::GP24(pin) => {
+                if mode == PinMode::High {
+                    pin.set_high().unwrap()
+                } else {
+                    pin.set_low().unwrap()
+                }
+            }
+            Self::GP23(pin) => {
+                if mode == PinMode::High {
+                    pin.set_high().unwrap()
+                } else {
+                    pin.set_low().unwrap()
+                }
+            }
+            Self::GP22(pin) => {
+                if mode == PinMode::High {
+                    pin.set_high().unwrap()
+                } else {
+                    pin.set_low().unwrap()
+                }
+            }
+            Self::GP21(pin) => {
+                if mode == PinMode::High {
+                    pin.set_high().unwrap()
+                } else {
+                    pin.set_low().unwrap()
+                }
+            }
+            Self::GP20(pin) => {
+                if mode == PinMode::High {
+                    pin.set_high().unwrap()
+                } else {
+                    pin.set_low().unwrap()
+                }
+            }
+            Self::GP19(pin) => {
+                if mode == PinMode::High {
+                    pin.set_high().unwrap()
+                } else {
+                    pin.set_low().unwrap()
+                }
+            }
+            Self::GP18(pin) => {
+                if mode == PinMode::High {
+                    pin.set_high().unwrap()
+                } else {
+                    pin.set_low().unwrap()
+                }
+            }
+            Self::GP17(pin) => {
+                if mode == PinMode::High {
+                    pin.set_high().unwrap()
+                } else {
+                    pin.set_low().unwrap()
+                }
+            }
+            Self::GP16(pin) => {
+                if mode == PinMode::High {
+                    pin.set_high().unwrap()
+                } else {
+                    pin.set_low().unwrap()
+                }
+            }
+            Self::GP15(pin) => {
+                if mode == PinMode::High {
+                    pin.set_high().unwrap()
+                } else {
+                    pin.set_low().unwrap()
+                }
+            }
+            Self::GP14(pin) => {
+                if mode == PinMode::High {
+                    pin.set_high().unwrap()
+                } else {
+                    pin.set_low().unwrap()
+                }
+            }
+            Self::GP13(pin) => {
+                if mode == PinMode::High {
+                    pin.set_high().unwrap()
+                } else {
+                    pin.set_low().unwrap()
+                }
+            }
+            Self::GP12(pin) => {
+                if mode == PinMode::High {
+                    pin.set_high().unwrap()
+                } else {
+                    pin.set_low().unwrap()
+                }
+            }
+            Self::GP11(pin) => {
+                if mode == PinMode::High {
+                    pin.set_high().unwrap()
+                } else {
+                    pin.set_low().unwrap()
+                }
+            }
+            Self::GP10(pin) => {
+                if mode == PinMode::High {
+                    pin.set_high().unwrap()
+                } else {
+                    pin.set_low().unwrap()
+                }
+            }
+            Self::GP9(pin) => {
+                if mode == PinMode::High {
+                    pin.set_high().unwrap()
+                } else {
+                    pin.set_low().unwrap()
+                }
+            }
+            Self::GP8(pin) => {
+                if mode == PinMode::High {
+                    pin.set_high().unwrap()
+                } else {
+                    pin.set_low().unwrap()
+                }
+            }
+            Self::GP7(pin) => {
+                if mode == PinMode::High {
+                    pin.set_high().unwrap()
+                } else {
+                    pin.set_low().unwrap()
+                }
+            }
+            Self::GP6(pin) => {
+                if mode == PinMode::High {
+                    pin.set_high().unwrap()
+                } else {
+                    pin.set_low().unwrap()
+                }
+            }
+            Self::GP5(pin) => {
+                if mode == PinMode::High {
+                    pin.set_high().unwrap()
+                } else {
+                    pin.set_low().unwrap()
+                }
+            }
+            Self::GP4(pin) => {
+                if mode == PinMode::High {
+                    pin.set_high().unwrap()
+                } else {
+                    pin.set_low().unwrap()
+                }
+            }
+            Self::GP3(pin) => {
+                if mode == PinMode::High {
+                    pin.set_high().unwrap()
+                } else {
+                    pin.set_low().unwrap()
+                }
+            }
+            Self::GP2(pin) => {
+                if mode == PinMode::High {
+                    pin.set_high().unwrap()
+                } else {
+                    pin.set_low().unwrap()
+                }
+            }
+            Self::GP1(pin) => {
+                if mode == PinMode::High {
+                    pin.set_high().unwrap()
+                } else {
+                    pin.set_low().unwrap()
+                }
+            }
+            Self::GP0(pin) => {
+                if mode == PinMode::High {
+                    pin.set_high().unwrap()
+                } else {
+                    pin.set_low().unwrap()
+                }
+            }
         }
     }
 }
@@ -121,35 +295,35 @@ impl OutputPins {
 impl InputPins {
     pub fn is_high(&self) -> bool {
         match self {
-            Self::GP28(pin) => {return pin.is_high().unwrap();}
-            Self::GP27(pin) => {return pin.is_high().unwrap();}
-            Self::GP26(pin) => {return pin.is_high().unwrap();}
-            Self::GP25(pin) => {return pin.is_high().unwrap();}
-            Self::GP24(pin) => {return pin.is_high().unwrap();}
-            Self::GP23(pin) => {return pin.is_high().unwrap();}
-            Self::GP22(pin) => {return pin.is_high().unwrap();}
-            Self::GP21(pin) => {return pin.is_high().unwrap();}
-            Self::GP20(pin) => {return pin.is_high().unwrap();}
-            Self::GP19(pin) => {return pin.is_high().unwrap();}
-            Self::GP18(pin) => {return pin.is_high().unwrap();}
-            Self::GP17(pin) => {return pin.is_high().unwrap();}
-            Self::GP16(pin) => {return pin.is_high().unwrap();}
-            Self::GP15(pin) => {return pin.is_high().unwrap();}
-            Self::GP14(pin) => {return pin.is_high().unwrap();}
-            Self::GP13(pin) => {return pin.is_high().unwrap();}
-            Self::GP12(pin) => {return pin.is_high().unwrap();}
-            Self::GP11(pin) => {return pin.is_high().unwrap();}
-            Self::GP10(pin) => {return pin.is_high().unwrap();}
-            Self::GP9(pin) => {return pin.is_high().unwrap();}
-            Self::GP8(pin) => {return pin.is_high().unwrap();}
-            Self::GP7(pin) => {return pin.is_high().unwrap();}
-            Self::GP6(pin) => {return pin.is_high().unwrap();}
-            Self::GP5(pin) => {return pin.is_high().unwrap();}
-            Self::GP4(pin) => {return pin.is_high().unwrap();}
-            Self::GP3(pin) => {return pin.is_high().unwrap();}
-            Self::GP2(pin) => {return pin.is_high().unwrap();}
-            Self::GP1(pin) => {return pin.is_high().unwrap();}
-            Self::GP0(pin) => {return pin.is_high().unwrap();}
+            Self::GP28(pin) => pin.is_high().unwrap(),
+            Self::GP27(pin) => pin.is_high().unwrap(),
+            Self::GP26(pin) => pin.is_high().unwrap(),
+            Self::GP25(pin) => pin.is_high().unwrap(),
+            Self::GP24(pin) => pin.is_high().unwrap(),
+            Self::GP23(pin) => pin.is_high().unwrap(),
+            Self::GP22(pin) => pin.is_high().unwrap(),
+            Self::GP21(pin) => pin.is_high().unwrap(),
+            Self::GP20(pin) => pin.is_high().unwrap(),
+            Self::GP19(pin) => pin.is_high().unwrap(),
+            Self::GP18(pin) => pin.is_high().unwrap(),
+            Self::GP17(pin) => pin.is_high().unwrap(),
+            Self::GP16(pin) => pin.is_high().unwrap(),
+            Self::GP15(pin) => pin.is_high().unwrap(),
+            Self::GP14(pin) => pin.is_high().unwrap(),
+            Self::GP13(pin) => pin.is_high().unwrap(),
+            Self::GP12(pin) => pin.is_high().unwrap(),
+            Self::GP11(pin) => pin.is_high().unwrap(),
+            Self::GP10(pin) => pin.is_high().unwrap(),
+            Self::GP9(pin) => pin.is_high().unwrap(),
+            Self::GP8(pin) => pin.is_high().unwrap(),
+            Self::GP7(pin) => pin.is_high().unwrap(),
+            Self::GP6(pin) => pin.is_high().unwrap(),
+            Self::GP5(pin) => pin.is_high().unwrap(),
+            Self::GP4(pin) => pin.is_high().unwrap(),
+            Self::GP3(pin) => pin.is_high().unwrap(),
+            Self::GP2(pin) => pin.is_high().unwrap(),
+            Self::GP1(pin) => pin.is_high().unwrap(),
+            Self::GP0(pin) => pin.is_high().unwrap(),
         }
     }
 }

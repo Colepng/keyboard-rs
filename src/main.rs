@@ -1,10 +1,10 @@
 #![no_std]
 #![no_main]
 
-mod pins;
 pub mod config;
-use pins::*;
+mod pins;
 use config::*;
+use pins::*;
 
 use cortex_m::prelude::{_embedded_hal_watchdog_Watchdog, _embedded_hal_watchdog_WatchdogEnable};
 use fugit::ExtU32;
