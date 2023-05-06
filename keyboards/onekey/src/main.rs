@@ -73,6 +73,44 @@ enum OutputPins {
     GP0(Pin<bank0::Gpio0, Output<Readable>>),
 }
 
+
+impl OutputPins {
+    fn set_output_pin_mode(&mut self, mode: PinMode) {
+        match self {
+            Self::GP28(pin) => {if mode == PinMode::High {pin.set_high().unwrap()} else {pin.set_low().unwrap()}}
+            Self::GP27(pin) => {if mode == PinMode::High {pin.set_high().unwrap()} else {pin.set_low().unwrap()}}
+            Self::GP26(pin) => {if mode == PinMode::High {pin.set_high().unwrap()} else {pin.set_low().unwrap()}}
+            Self::GP25(pin) => {if mode == PinMode::High {pin.set_high().unwrap()} else {pin.set_low().unwrap()}}
+            Self::GP24(pin) => {if mode == PinMode::High {pin.set_high().unwrap()} else {pin.set_low().unwrap()}}
+            Self::GP23(pin) => {if mode == PinMode::High {pin.set_high().unwrap()} else {pin.set_low().unwrap()}}
+            Self::GP22(pin) => {if mode == PinMode::High {pin.set_high().unwrap()} else {pin.set_low().unwrap()}}
+            Self::GP21(pin) => {if mode == PinMode::High {pin.set_high().unwrap()} else {pin.set_low().unwrap()}}
+            Self::GP20(pin) => {if mode == PinMode::High {pin.set_high().unwrap()} else {pin.set_low().unwrap()}}
+            Self::GP19(pin) => {if mode == PinMode::High {pin.set_high().unwrap()} else {pin.set_low().unwrap()}}
+            Self::GP18(pin) => {if mode == PinMode::High {pin.set_high().unwrap()} else {pin.set_low().unwrap()}}
+            Self::GP17(pin) => {if mode == PinMode::High {pin.set_high().unwrap()} else {pin.set_low().unwrap()}}
+            Self::GP16(pin) => {if mode == PinMode::High {pin.set_high().unwrap()} else {pin.set_low().unwrap()}}
+            Self::GP15(pin) => {if mode == PinMode::High {pin.set_high().unwrap()} else {pin.set_low().unwrap()}}
+            Self::GP14(pin) => {if mode == PinMode::High {pin.set_high().unwrap()} else {pin.set_low().unwrap()}}
+            Self::GP13(pin) => {if mode == PinMode::High {pin.set_high().unwrap()} else {pin.set_low().unwrap()}}
+            Self::GP12(pin) => {if mode == PinMode::High {pin.set_high().unwrap()} else {pin.set_low().unwrap()}}
+            Self::GP11(pin) => {if mode == PinMode::High {pin.set_high().unwrap()} else {pin.set_low().unwrap()}}
+            Self::GP10(pin) => {if mode == PinMode::High {pin.set_high().unwrap()} else {pin.set_low().unwrap()}}
+            Self::GP9(pin) => {if mode == PinMode::High {pin.set_high().unwrap()} else {pin.set_low().unwrap()}}
+            Self::GP8(pin) => {if mode == PinMode::High {pin.set_high().unwrap()} else {pin.set_low().unwrap()}}
+            Self::GP7(pin) => {if mode == PinMode::High {pin.set_high().unwrap()} else {pin.set_low().unwrap()}}
+            Self::GP6(pin) => {if mode == PinMode::High {pin.set_high().unwrap()} else {pin.set_low().unwrap()}}
+            Self::GP5(pin) => {if mode == PinMode::High {pin.set_high().unwrap()} else {pin.set_low().unwrap()}}
+            Self::GP4(pin) => {if mode == PinMode::High {pin.set_high().unwrap()} else {pin.set_low().unwrap()}}
+            Self::GP3(pin) => {if mode == PinMode::High {pin.set_high().unwrap()} else {pin.set_low().unwrap()}}
+            Self::GP2(pin) => {if mode == PinMode::High {pin.set_high().unwrap()} else {pin.set_low().unwrap()}}
+            Self::GP1(pin) => {if mode == PinMode::High {pin.set_high().unwrap()} else {pin.set_low().unwrap()}}
+            Self::GP0(pin) => {if mode == PinMode::High {pin.set_high().unwrap()} else {pin.set_low().unwrap()}}
+        }
+    }
+}
+
+
 #[entry]
 fn main() -> ! {
     // setup peripherals
@@ -180,11 +218,7 @@ fn main() -> ! {
             let mut keycodes: [u8; 6] = [0x00; 6];
             let mut index: usize = 0;
             for (row, pin) in rows.iter_mut().enumerate() {
-                match pin {
-                    OutputPins::GP17(x) => x.set_high().unwrap(),
-                    OutputPins::GP26(x) => x.set_high().unwrap(),
-                    OutputPins::GP28(x) => x.set_high().unwrap(),
-                }
+                pin.set_output_pin_mode(PinMode::High);
                 for (col, pin) in cols.iter().enumerate() {
                     match pin {
                         InputPins::GP15(x) => {
@@ -201,11 +235,7 @@ fn main() -> ! {
                         }
                     }
                 }
-                match pin {
-                    OutputPins::GP17(x) => x.set_low().unwrap(),
-                    OutputPins::GP26(x) => x.set_low().unwrap(),
-                    OutputPins::GP28(x) => x.set_low().unwrap(),
-                }
+                pin.set_output_pin_mode(PinMode::Low);
             }
             let report = KeyboardReport {
                 modifier: 0x00,
@@ -232,11 +262,7 @@ fn main() -> ! {
             let mut keycodes: [u8; 6] = [0x00; 6];
             let mut index: usize = 0;
             for (col, pin) in cols.iter_mut().enumerate() {
-                match pin {
-                    OutputPins::GP17(x) => x.set_high().unwrap(),
-                    OutputPins::GP26(x) => x.set_high().unwrap(),
-                    OutputPins::GP28(x) => x.set_high().unwrap(),
-                }
+                pin.set_output_pin_mode(PinMode::High);
                 for (row, pin) in rows.iter().enumerate() {
                     match pin {
                         InputPins::GP15(x) => {
@@ -253,11 +279,7 @@ fn main() -> ! {
                         }
                     }
                 }
-                match pin {
-                    OutputPins::GP17(x) => x.set_low().unwrap(),
-                    OutputPins::GP26(x) => x.set_low().unwrap(),
-                    OutputPins::GP28(x) => x.set_low().unwrap(),
-                }
+                pin.set_output_pin_mode(PinMode::Low);
             }
             let report = KeyboardReport {
                 modifier: 0x00,
