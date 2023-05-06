@@ -34,6 +34,45 @@ static mut USB_BUS: Option<UsbBusAllocator<hal::usb::UsbBus>> = None;
 /// The USB Human Interface Device Driver (shared with the interrupt).
 static mut USB_HID: Option<hid_class::HIDClass<hal::usb::UsbBus>> = None;
 
+
+#[derive(PartialEq)]
+enum PinMode {
+    High,
+    Low,
+}
+
+enum OutputPins {
+    GP28(Pin<bank0::Gpio28, Output<Readable>>),
+    GP27(Pin<bank0::Gpio27, Output<Readable>>),
+    GP26(Pin<bank0::Gpio26, Output<Readable>>),
+    GP25(Pin<bank0::Gpio25, Output<Readable>>),
+    GP24(Pin<bank0::Gpio24, Output<Readable>>),
+    GP23(Pin<bank0::Gpio23, Output<Readable>>),
+    GP22(Pin<bank0::Gpio22, Output<Readable>>),
+    GP21(Pin<bank0::Gpio21, Output<Readable>>),
+    GP20(Pin<bank0::Gpio20, Output<Readable>>),
+    GP19(Pin<bank0::Gpio19, Output<Readable>>),
+    GP18(Pin<bank0::Gpio18, Output<Readable>>),
+    GP17(Pin<bank0::Gpio17, Output<Readable>>),
+    GP16(Pin<bank0::Gpio16, Output<Readable>>),
+    GP15(Pin<bank0::Gpio15, Output<Readable>>),
+    GP14(Pin<bank0::Gpio14, Output<Readable>>),
+    GP13(Pin<bank0::Gpio13, Output<Readable>>),
+    GP12(Pin<bank0::Gpio12, Output<Readable>>),
+    GP11(Pin<bank0::Gpio11, Output<Readable>>),
+    GP10(Pin<bank0::Gpio10, Output<Readable>>),
+    GP9(Pin<bank0::Gpio9, Output<Readable>>),
+    GP8(Pin<bank0::Gpio8, Output<Readable>>),
+    GP7(Pin<bank0::Gpio7, Output<Readable>>),
+    GP6(Pin<bank0::Gpio6, Output<Readable>>),
+    GP5(Pin<bank0::Gpio5, Output<Readable>>),
+    GP4(Pin<bank0::Gpio4, Output<Readable>>),
+    GP3(Pin<bank0::Gpio3, Output<Readable>>),
+    GP2(Pin<bank0::Gpio2, Output<Readable>>),
+    GP1(Pin<bank0::Gpio1, Output<Readable>>),
+    GP0(Pin<bank0::Gpio0, Output<Readable>>),
+}
+
 #[entry]
 fn main() -> ! {
     // setup peripherals
@@ -122,17 +161,6 @@ fn main() -> ! {
         [0x04, 0x05, 0x06], 
         [0x07, 0x08, 0x09],
     ];
-
-    // do this for the rest of output and input tommorow in ics
-    enum OutputPins {
-        GP28(Pin<bank0::Gpio28, Output<Readable>>),
-        GP26(Pin<bank0::Gpio26, Output<Readable>>),
-        GP17(Pin<bank0::Gpio17, Output<Readable>>),
-    }
-    enum InputPins {
-        GP15(Pin<bank0::Gpio15, Input<PullDown>>),
-        GP16(Pin<bank0::Gpio16, Input<PullDown>>),
-    }
 
     if power_row {
         let mut rows = [
