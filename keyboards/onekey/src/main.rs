@@ -73,6 +73,37 @@ enum OutputPins {
     GP0(Pin<bank0::Gpio0, Output<Readable>>),
 }
 
+enum InputPins {
+    GP28(Pin<bank0::Gpio28, Input<PullDown>>),
+    GP27(Pin<bank0::Gpio27, Input<PullDown>>),
+    GP26(Pin<bank0::Gpio26, Input<PullDown>>),
+    GP25(Pin<bank0::Gpio25, Input<PullDown>>),
+    GP24(Pin<bank0::Gpio24, Input<PullDown>>),
+    GP23(Pin<bank0::Gpio23, Input<PullDown>>),
+    GP22(Pin<bank0::Gpio22, Input<PullDown>>),
+    GP21(Pin<bank0::Gpio21, Input<PullDown>>),
+    GP20(Pin<bank0::Gpio20, Input<PullDown>>),
+    GP19(Pin<bank0::Gpio19, Input<PullDown>>),
+    GP18(Pin<bank0::Gpio18, Input<PullDown>>),
+    GP17(Pin<bank0::Gpio17, Input<PullDown>>),
+    GP16(Pin<bank0::Gpio16, Input<PullDown>>),
+    GP15(Pin<bank0::Gpio15, Input<PullDown>>),
+    GP14(Pin<bank0::Gpio14, Input<PullDown>>),
+    GP13(Pin<bank0::Gpio13, Input<PullDown>>),
+    GP12(Pin<bank0::Gpio12, Input<PullDown>>),
+    GP11(Pin<bank0::Gpio11, Input<PullDown>>),
+    GP10(Pin<bank0::Gpio10, Input<PullDown>>),
+    GP9(Pin<bank0::Gpio9, Input<PullDown>>),
+    GP8(Pin<bank0::Gpio8, Input<PullDown>>),
+    GP7(Pin<bank0::Gpio7, Input<PullDown>>),
+    GP6(Pin<bank0::Gpio6, Input<PullDown>>),
+    GP5(Pin<bank0::Gpio5, Input<PullDown>>),
+    GP4(Pin<bank0::Gpio4, Input<PullDown>>),
+    GP3(Pin<bank0::Gpio3, Input<PullDown>>),
+    GP2(Pin<bank0::Gpio2, Input<PullDown>>),
+    GP1(Pin<bank0::Gpio1, Input<PullDown>>),
+    GP0(Pin<bank0::Gpio0, Input<PullDown>>),
+}
 
 impl OutputPins {
     fn set_output_pin_mode(&mut self, mode: PinMode) {
