@@ -2,7 +2,9 @@
 #![no_main]
 
 mod pins;
+pub mod config;
 use pins::*;
+use config::*;
 
 use cortex_m::prelude::{_embedded_hal_watchdog_Watchdog, _embedded_hal_watchdog_WatchdogEnable};
 use fugit::ExtU32;
@@ -109,84 +111,33 @@ fn main() -> ! {
         hal::pac::NVIC::unmask(hal::pac::interrupt::USBCTRL_IRQ);
     };
 
+    let mut matrix = Matrix::new(pins);
+
     // let mut led = pins.led.into_push_pull_output();
 
-    let power_row: bool = false;
-
-    let keys = [
-        [0x04, 0x05, 0x06], 
-        [0x07, 0x08, 0x09],
-    ];
-
-    if power_row {
-        let mut rows = [
-            OutputPins::GP28(pins.gpio28.into_readable_output()),
-            OutputPins::GP26(pins.gpio26.into_readable_output()),
-            OutputPins::GP17(pins.gpio17.into_readable_output()),
-        ];
-        let cols = [
-            InputPins::GP16(pins.gpio16.into_pull_down_input()),
-            InputPins::GP15(pins.gpio15.into_pull_down_input()),
-        ];
-
-        loop {
-            // feed watchdog
-            watchdog.feed();
-            // moving this outside of the loop can make this more effiecnt by checking if the key is pressed and not over writing it
-            let mut keycodes: [u8; 6] = [0x00; 6];
-            let mut index: usize = 0;
-            for (row, pin) in rows.iter_mut().enumerate() {
-                pin.set_output_pin_mode(PinMode::High);
-                for (col, pin) in cols.iter().enumerate() {
-                    if index <= 6 && pin.is_high() {
-                        keycodes[index] = keys[row][col];
-                        index += 1;
-                    }
+    loop {
+        // feed watchdog
+        watchdog.feed();
+        // moving this outside of the loop can make this more effiecnt by checking if the key is pressed and not over writing it
+        let mut keycodes: [u8; 6] = [0x00; 6];
+        let mut index: usize = 0;
+        for (col, pin) in matrix.cols.iter_mut().enumerate() {
+            pin.set_output_pin_mode(PinMode::High);
+            for (row, pin) in matrix.rows.iter().enumerate() {
+                if index <= 6 && pin.is_high() {
+                    keycodes[index] = KEYS[row][col];
+                    index += 1;
                 }
-                pin.set_output_pin_mode(PinMode::Low);
             }
-            let report = KeyboardReport {
-                modifier: 0x00,
-                reserved: 0x00,
-                leds: 0x00,
-                keycodes: keycodes,
-            };
-            push_keyboard_inputs(report).ok().unwrap_or(0);
+            pin.set_output_pin_mode(PinMode::Low);
         }
-    } else {
-        let mut cols = [
-            OutputPins::GP28(pins.gpio28.into_readable_output()),
-            OutputPins::GP26(pins.gpio26.into_readable_output()),
-            OutputPins::GP17(pins.gpio17.into_readable_output()),
-        ];
-        let rows = [
-            InputPins::GP16(pins.gpio16.into_pull_down_input()),
-            InputPins::GP15(pins.gpio15.into_pull_down_input()),
-        ];
-        loop {
-            // feed watchdog
-            watchdog.feed();
-            // moving this outside of the loop can make this more effiecnt by checking if the key is pressed and not over writing it
-            let mut keycodes: [u8; 6] = [0x00; 6];
-            let mut index: usize = 0;
-            for (col, pin) in cols.iter_mut().enumerate() {
-                pin.set_output_pin_mode(PinMode::High);
-                for (row, pin) in rows.iter().enumerate() {
-                    if index <= 6 && pin.is_high() {
-                        keycodes[index] = keys[row][col];
-                        index += 1;
-                    }
-                }
-                pin.set_output_pin_mode(PinMode::Low);
-            }
-            let report = KeyboardReport {
-                modifier: 0x00,
-                reserved: 0x00,
-                leds: 0x00,
-                keycodes: keycodes,
-            };
-            push_keyboard_inputs(report).ok().unwrap_or(0);
-        }
+        let report = KeyboardReport {
+            modifier: 0x00,
+            reserved: 0x00,
+            leds: 0x00,
+            keycodes: keycodes,
+        };
+        push_keyboard_inputs(report).ok().unwrap_or(0);
     }
 }
 
