@@ -1,4 +1,4 @@
-# keyboard
+# Keyboard
 Keyboard firmware written in rust 
 
 # Todo
