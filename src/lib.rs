@@ -1,9 +1,11 @@
 #![no_std]
 #![no_main]
 
+pub mod keycode;
 use cortex_m::prelude::{_embedded_hal_watchdog_Watchdog, _embedded_hal_watchdog_WatchdogEnable};
 use embedded_hal::digital::v2::{InputPin, OutputPin};
 use fugit::ExtU32;
+use keycode::Keycodes;
 use panic_halt as _;
 use rp_pico::hal;
 use rp_pico::hal::{gpio::DynPin, pac::interrupt};
@@ -113,7 +115,7 @@ pub fn init() -> (rp_pico::Pins, hal::Watchdog) {
 pub fn matrix_scaning<const COLS: usize, const ROWS: usize>(
     mut cols: [DynPin; COLS],
     mut rows: [DynPin; ROWS],
-    keys: [[u8; COLS]; ROWS],
+    keys: [[Keycodes; COLS]; ROWS],
     mut watchdog: hal::Watchdog,
 ) -> ! {
     rows.iter_mut().for_each(|pin| {
@@ -133,7 +135,7 @@ pub fn matrix_scaning<const COLS: usize, const ROWS: usize>(
             pin.set_high().unwrap();
             for (row, pin) in rows.iter_mut().enumerate() {
                 if index <= 6 && pin.is_high().unwrap() {
-                    keycodes[index] = keys[row][col];
+                    keycodes[index] = keys[row][col] as u8;
                     index += 1;
                 }
             }

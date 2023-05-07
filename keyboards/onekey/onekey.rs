@@ -2,6 +2,8 @@
 #![no_main]
 
 use keyboardrs::{init, matrix_scaning};
+use keyboardrs::keycode::{Keycodes, Keycodes::*};
+
 use panic_halt as _;
 use rp_pico::entry;
 use rp_pico::hal::gpio::DynPin;
@@ -10,7 +12,7 @@ use rp_pico::hal::gpio::DynPin;
 fn main() -> ! {
     const NUMOFCOL: usize = 1;
     const NUMOFROW: usize = 1;
-    const KEYS: [[u8; NUMOFCOL]; NUMOFROW] = [[0x05]];
+    const KEYS: [[Keycodes; NUMOFCOL]; NUMOFROW] = [[KC_H]];
 
     let (pins, watchdog) = init();
 
