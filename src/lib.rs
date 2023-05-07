@@ -1,16 +1,12 @@
 #![no_std]
 #![no_main]
 
-pub mod config;
-mod keyboard;
-use config::*;
-use keyboard::*;
-
 use cortex_m::prelude::{_embedded_hal_watchdog_Watchdog, _embedded_hal_watchdog_WatchdogEnable};
+use embedded_hal::digital::v2::{InputPin, OutputPin};
 use fugit::ExtU32;
 use panic_halt as _;
-use rp_pico::hal::pac::interrupt;
-use rp_pico::{entry, hal};
+use rp_pico::hal;
+use rp_pico::hal::{gpio::DynPin, pac::interrupt};
 use usb_device::{
     class_prelude::UsbBusAllocator,
     prelude::{UsbDevice, UsbDeviceBuilder, UsbVidPid},
@@ -31,7 +27,8 @@ static mut USB_BUS: Option<UsbBusAllocator<hal::usb::UsbBus>> = None;
 /// The USB Human Interface Device Driver (shared with the interrupt).
 static mut USB_HID: Option<hid_class::HIDClass<hal::usb::UsbBus>> = None;
 
-pub fn init() -> ! {
+// maybe remove the watchdog in the future
+pub fn init() -> (rp_pico::Pins, hal::Watchdog) {
     // setup peripherals
     let mut pac = hal::pac::Peripherals::take().unwrap();
 
@@ -110,9 +107,21 @@ pub fn init() -> ! {
         hal::pac::NVIC::unmask(hal::pac::interrupt::USBCTRL_IRQ);
     };
 
-    let mut matrix = Matrix::new(pins);
+    (pins, watchdog)
+}
 
-    // let mut led = pins.led.into_push_pull_output();
+pub fn matrix_scaning<const COLS: usize, const ROWS: usize>(
+    mut cols: [DynPin; COLS],
+    mut rows: [DynPin; ROWS],
+    keys: [[u8; COLS]; ROWS],
+    mut watchdog: hal::Watchdog,
+) -> ! {
+    rows.iter_mut().for_each(|pin| {
+        pin.into_pull_down_input();
+    });
+    cols.iter_mut().for_each(|pin| {
+        pin.into_readable_output();
+    });
 
     loop {
         // feed watchdog
@@ -120,21 +129,21 @@ pub fn init() -> ! {
         // moving this outside of the loop can make this more effiecnt by checking if the key is pressed and not over writing it
         let mut keycodes: [u8; 6] = [0x00; 6];
         let mut index: usize = 0;
-        for (col, pin) in matrix.cols.iter_mut().enumerate() {
-            pin.set_output_pin_mode(PinMode::High);
-            for (row, pin) in matrix.rows.iter().enumerate() {
-                if index <= 6 && pin.is_high() {
-                    keycodes[index] = KEYS[row][col];
+        for (col, pin) in cols.iter_mut().enumerate() {
+            pin.set_high().unwrap();
+            for (row, pin) in rows.iter_mut().enumerate() {
+                if index <= 6 && pin.is_high().unwrap() {
+                    keycodes[index] = keys[row][col];
                     index += 1;
                 }
             }
-            pin.set_output_pin_mode(PinMode::Low);
+            pin.set_low().unwrap();
         }
         let report = KeyboardReport {
             modifier: 0x00,
             reserved: 0x00,
             leds: 0x00,
-            keycodes: keycodes,
+            keycodes,
         };
         push_keyboard_inputs(report).ok().unwrap_or(0);
     }
