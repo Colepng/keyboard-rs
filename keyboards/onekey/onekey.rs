@@ -14,7 +14,8 @@ use rp_pico::hal::gpio::DynPin;
 fn main() -> ! {
     const NUMOFCOL: usize = 1;
     const NUMOFROW: usize = 1;
-    const KEYS: [[Keycodes; NUMOFCOL]; NUMOFROW] = [[KC_H]];
+    const NUMOFLAYES: usize = 2;
+    const KEYS: [[[Keycodes; NUMOFCOL]; NUMOFROW]; NUMOFLAYES] = [[[KC_MUTE]], [[KC_MUTE]]];
 
     let (pins, watchdog, delay) = init();
 

@@ -1,9 +1,9 @@
 #![no_std]
 #![no_main]
 
-pub mod keycode;
 pub mod config;
 pub mod hardware;
+pub mod keycode;
 use config::Config;
 use cortex_m::delay::Delay;
 use cortex_m::prelude::{_embedded_hal_watchdog_Watchdog, _embedded_hal_watchdog_WatchdogEnable};
@@ -138,8 +138,14 @@ pub fn matrix_scaning<const COLS: usize, const ROWS: usize, const LAYERS: usize>
 
     let mut last_state_a: bool = false;
     let mut state_a: bool = false;
+    let mut current_state = [[false; COLS]; ROWS];
+    let mut old_current_state = current_state;
     if config.encoder {
-        encoder.as_mut().expect("If encoder is true, must supply a pin for channel_a").channel_a.into_pull_up_input();
+        encoder
+            .as_mut()
+            .expect("If encoder is true, must supply a pin for channel_a")
+            .channel_a
+            .into_pull_up_input();
         // If the excpect did not happend the first time it must mean that encoder was supplyed so
         // it's safe to unwrap it
         encoder.as_mut().unwrap().channel_b.into_pull_up_input();
@@ -162,6 +168,8 @@ pub fn matrix_scaning<const COLS: usize, const ROWS: usize, const LAYERS: usize>
             keycodes: [0x00; 6],
         };
 
+        // current_state = [[false; COLS]; ROWS];
+
         if config.encoder {
             state_a = encoder.as_mut().unwrap().channel_a.is_high().unwrap();
             if last_state_a != state_a && state_a {
@@ -182,9 +190,21 @@ pub fn matrix_scaning<const COLS: usize, const ROWS: usize, const LAYERS: usize>
         for (col, pin) in cols.iter_mut().enumerate() {
             pin.set_high().unwrap();
             for (row, pin) in rows.iter_mut().enumerate() {
+                let temp = keys[layer][row][col].try_into();
                 if index <= 6 && pin.is_high().unwrap() {
-                    report.keycodes[index] = keys[layer][row][col] as u8;
-                    index += 1;
+                    current_state[row][col] = true;
+                    if let Ok(keycode) = temp {
+                        report.keycodes[index] = keycode;
+                        index += 1;
+                    }
+                } else {
+                    if old_current_state[row][col] {
+                        match keys[layer][row][col] {
+                            Keycodes::KC_LAYER(x) => layer = x as usize,
+                            _ => {}
+                        }
+                    }
+                    current_state[row][col] = false;
                 }
             }
             pin.set_low().unwrap();
@@ -194,6 +214,7 @@ pub fn matrix_scaning<const COLS: usize, const ROWS: usize, const LAYERS: usize>
         if config.encoder {
             last_state_a = state_a;
         }
+        old_current_state = current_state;
     }
 }
 

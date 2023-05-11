@@ -4,9 +4,12 @@ Keyboard firmware written in rust
 # Todo
 - [ ] abstraction for keycodes
 - [ ] layers
+    - [x] switch layers
+    - [ ] toggle layers
+    - [ ] momentary layers
 - [ ] rotary encoders
-    - [x] single rotery encoder support
-    - [ ] multi layer action suppoer
+    - [x] single rotary encoder support
+    - [ ] multi layer action support
     - [ ] multi rotary encoder support
 - [ ] macros
 - [ ] row2col scanning
