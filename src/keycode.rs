@@ -38,4 +38,8 @@ pub enum Keycodes {
     KC_8 = 0x25,
     KC_9 = 0x26,
     KC_0 = 0x27,
+
+    KC_MUTE = 0x7f,
+    KC_VOLUP = 0x80,
+    KC_VOLDOWN = 0x81,
 }

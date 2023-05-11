@@ -2,12 +2,17 @@
 #![no_main]
 
 pub mod keycode;
+pub mod config;
+pub mod hardware;
+use config::Config;
+use cortex_m::delay::Delay;
 use cortex_m::prelude::{_embedded_hal_watchdog_Watchdog, _embedded_hal_watchdog_WatchdogEnable};
 use embedded_hal::digital::v2::{InputPin, OutputPin};
 use fugit::ExtU32;
+use hardware::Encoder;
 use keycode::Keycodes;
 use panic_halt as _;
-use rp_pico::hal;
+use rp_pico::hal::{self, Clock};
 use rp_pico::hal::{gpio::DynPin, pac::interrupt};
 use usb_device::{
     class_prelude::UsbBusAllocator,
@@ -30,7 +35,7 @@ static mut USB_BUS: Option<UsbBusAllocator<hal::usb::UsbBus>> = None;
 static mut USB_HID: Option<hid_class::HIDClass<hal::usb::UsbBus>> = None;
 
 // maybe remove the watchdog in the future
-pub fn init() -> (rp_pico::Pins, hal::Watchdog) {
+pub fn init() -> (rp_pico::Pins, hal::Watchdog, Delay) {
     // setup peripherals
     let mut pac = hal::pac::Peripherals::take().unwrap();
 
@@ -109,14 +114,20 @@ pub fn init() -> (rp_pico::Pins, hal::Watchdog) {
         hal::pac::NVIC::unmask(hal::pac::interrupt::USBCTRL_IRQ);
     };
 
-    (pins, watchdog)
+    let core = hal::pac::CorePeripherals::take().unwrap();
+    let mut delay = cortex_m::delay::Delay::new(core.SYST, clocks.system_clock.freq().to_Hz());
+    (pins, watchdog, delay)
 }
 
-pub fn matrix_scaning<const COLS: usize, const ROWS: usize>(
+pub fn matrix_scaning<const COLS: usize, const ROWS: usize, const LAYERS: usize>(
     mut cols: [DynPin; COLS],
     mut rows: [DynPin; ROWS],
-    keys: [[Keycodes; COLS]; ROWS],
+    keys: [[[Keycodes; COLS]; ROWS]; LAYERS],
+    mut encoder: Option<Encoder>,
+    // mut led: DynPin,
+    config: Config,
     mut watchdog: hal::Watchdog,
+    mut delay: Delay,
 ) -> ! {
     rows.iter_mut().for_each(|pin| {
         pin.into_pull_down_input();
@@ -125,29 +136,64 @@ pub fn matrix_scaning<const COLS: usize, const ROWS: usize>(
         pin.into_readable_output();
     });
 
+    let mut last_state_a: bool = false;
+    let mut state_a: bool = false;
+    if config.encoder {
+        encoder.as_mut().expect("If encoder is true, must supply a pin for channel_a").channel_a.into_pull_up_input();
+        // If the excpect did not happend the first time it must mean that encoder was supplyed so
+        // it's safe to unwrap it
+        encoder.as_mut().unwrap().channel_b.into_pull_up_input();
+        last_state_a = encoder.as_mut().unwrap().channel_a.is_high().unwrap();
+    }
+
+    let mut layer = 0;
+    let mut index: usize;
+    let mut report: KeyboardReport;
     loop {
         // feed watchdog
         watchdog.feed();
         // moving this outside of the loop can make this more effiecnt by checking if the key is pressed and not over writing it
-        let mut keycodes: [u8; 6] = [0x00; 6];
-        let mut index: usize = 0;
+        index = 0;
+
+        report = KeyboardReport {
+            modifier: 0x00,
+            reserved: 0x00,
+            leds: 0x00,
+            keycodes: [0x00; 6],
+        };
+
+        if config.encoder {
+            state_a = encoder.as_mut().unwrap().channel_a.is_high().unwrap();
+            if last_state_a != state_a && state_a {
+                if state_a != encoder.as_mut().unwrap().channel_b.is_high().unwrap() {
+                    report.keycodes[0] = 0x80;
+                    delay.delay_ms(50);
+                    push_keyboard_inputs(report).ok().unwrap_or(0);
+                    report.keycodes[0] = 0x00;
+                } else {
+                    delay.delay_ms(50);
+                    report.keycodes[0] = 0x81;
+                    push_keyboard_inputs(report).ok().unwrap_or(0);
+                    report.keycodes[0] = 0x00;
+                }
+            }
+        }
+
         for (col, pin) in cols.iter_mut().enumerate() {
             pin.set_high().unwrap();
             for (row, pin) in rows.iter_mut().enumerate() {
                 if index <= 6 && pin.is_high().unwrap() {
-                    keycodes[index] = keys[row][col] as u8;
+                    report.keycodes[index] = keys[layer][row][col] as u8;
                     index += 1;
                 }
             }
             pin.set_low().unwrap();
         }
-        let report = KeyboardReport {
-            modifier: 0x00,
-            reserved: 0x00,
-            leds: 0x00,
-            keycodes,
-        };
+
         push_keyboard_inputs(report).ok().unwrap_or(0);
+        if config.encoder {
+            last_state_a = state_a;
+        }
     }
 }
 

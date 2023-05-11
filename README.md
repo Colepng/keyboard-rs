@@ -4,7 +4,10 @@ Keyboard firmware written in rust
 # Todo
 - [ ] abstraction for keycodes
 - [ ] layers
-- [ ] rotary encoder support
+- [ ] rotary encoders
+    - [x] single rotery encoder support
+    - [ ] multi layer action suppoer
+    - [ ] multi rotary encoder support
 - [ ] macros
 - [ ] row2col scanning
 - [ ] duplex matrix scanning
