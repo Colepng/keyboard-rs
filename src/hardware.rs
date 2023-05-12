@@ -2,9 +2,9 @@ use rp_pico::hal::gpio::DynPin;
 
 use crate::keycode::Keycodes;
 
-pub struct Encoder {
+pub struct Encoder<const LAYERS: usize> {
     pub channel_a: DynPin,
     pub channel_b: DynPin,
-    pub action_clock_wise: Keycodes,
-    pub action_counter_clock_wise: Keycodes,
+    pub actions_clock_wise: [Keycodes; LAYERS],
+    pub actions_counter_clock_wise: [Keycodes; LAYERS],
 }

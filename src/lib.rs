@@ -123,7 +123,7 @@ pub fn matrix_scaning<const COLS: usize, const ROWS: usize, const LAYERS: usize>
     mut cols: [DynPin; COLS],
     mut rows: [DynPin; ROWS],
     keys: [[[Keycodes; COLS]; ROWS]; LAYERS],
-    mut encoder: Option<Encoder>,
+    mut encoder: Option<Encoder<LAYERS>>,
     // mut led: DynPin,
     config: Config,
     mut watchdog: hal::Watchdog,
@@ -168,19 +168,33 @@ pub fn matrix_scaning<const COLS: usize, const ROWS: usize, const LAYERS: usize>
             keycodes: [0x00; 6],
         };
 
-        // current_state = [[false; COLS]; ROWS];
-
         if config.encoder {
             state_a = encoder.as_mut().unwrap().channel_a.is_high().unwrap();
             if last_state_a != state_a && state_a {
                 if state_a != encoder.as_mut().unwrap().channel_b.is_high().unwrap() {
-                    report.keycodes[0] = 0x80;
+                    let keycode = encoder.as_mut().unwrap().actions_clock_wise[layer];
+                    if let Ok(keycode) = keycode.try_into() {
+                        report.keycodes[index] = keycode;
+                    } else {
+                        match keycode {
+                            Keycodes::KC_LAYER(x) => layer = x as usize,
+                            _ => {},
+                        }
+                    }
                     delay.delay_ms(50);
                     push_keyboard_inputs(report).ok().unwrap_or(0);
                     report.keycodes[0] = 0x00;
                 } else {
+                    let keycode = encoder.as_mut().unwrap().actions_counter_clock_wise[layer];
+                    if let Ok(keycode) = keycode.try_into() {
+                        report.keycodes[index] = keycode;
+                    } else {
+                        match keycode {
+                            Keycodes::KC_LAYER(x) => layer = x as usize,
+                            _ => {},
+                        }
+                    }
                     delay.delay_ms(50);
-                    report.keycodes[0] = 0x81;
                     push_keyboard_inputs(report).ok().unwrap_or(0);
                     report.keycodes[0] = 0x00;
                 }
