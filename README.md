@@ -9,7 +9,7 @@ Keyboard firmware written in rust
     - [ ] momentary layers
 - [ ] rotary encoders
     - [x] single rotary encoder support
-    - [ ] multi layer action support
+    - [x] multi layer action support
     - [ ] multi rotary encoder support
 - [ ] macros
 - [ ] row2col scanning
