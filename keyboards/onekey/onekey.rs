@@ -15,7 +15,7 @@ fn main() -> ! {
     const NUMOFCOL: usize = 1;
     const NUMOFROW: usize = 1;
     const NUMOFLAYES: usize = 2;
-    const KEYS: [[[Keycodes; NUMOFCOL]; NUMOFROW]; NUMOFLAYES] = [[[KC_MUTE]], [[KC_MUTE]]];
+    const KEYS: [[[Keycodes; NUMOFCOL]; NUMOFROW]; NUMOFLAYES] = [[[KC_LAYER(1)]], [[KC_LAYER(0)]]];
 
     let (pins, watchdog, delay) = init();
 
@@ -27,8 +27,8 @@ fn main() -> ! {
     let encoder = Encoder {
         channel_a: pins.gpio22.into(),
         channel_b: pins.gpio21.into(),
-        action_clock_wise: KC_VOLUP,
-        action_counter_clock_wise: KC_VOLDOWN,
+        actions_clock_wise: [KC_VOLUP, KC_B],
+        actions_counter_clock_wise: [KC_VOLDOWN, KC_A],
     };
 
     matrix_scaning(col, row, KEYS, Some(encoder), config, watchdog, delay);
