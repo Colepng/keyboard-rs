@@ -1,4 +1,4 @@
-use rp_pico::hal::gpio::DynPin;
+use rp2040_hal::gpio::DynPin;
 
 use crate::keycode::Keycodes;
 

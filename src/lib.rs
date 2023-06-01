@@ -9,11 +9,13 @@ use cortex_m::delay::Delay;
 use cortex_m::prelude::{_embedded_hal_watchdog_Watchdog, _embedded_hal_watchdog_WatchdogEnable};
 use embedded_hal::digital::v2::{InputPin, OutputPin};
 use fugit::ExtU32;
+use hal::pac::interrupt;
+use hal::Clock;
 use hardware::Encoder;
 use keycode::Keycodes;
 use panic_halt as _;
-use rp_pico::hal::{self, Clock};
-use rp_pico::hal::{gpio::DynPin, pac::interrupt};
+use rp2040_hal as hal;
+use rp2040_hal::gpio::{DynPin, Pins};
 use usb_device::{
     class_prelude::UsbBusAllocator,
     prelude::{UsbDevice, UsbDeviceBuilder, UsbVidPid},
@@ -34,8 +36,12 @@ static mut USB_BUS: Option<UsbBusAllocator<hal::usb::UsbBus>> = None;
 /// The USB Human Interface Device Driver (shared with the interrupt).
 static mut USB_HID: Option<hid_class::HIDClass<hal::usb::UsbBus>> = None;
 
+/// External high-speed crystal on the Raspberry Pi Pico board is 12 MHz. Adjust
+/// if your board has a different frequency
+const XTAL_FREQ_HZ: u32 = 12_000_000u32;
+
 // maybe remove the watchdog in the future
-pub fn init() -> (rp_pico::Pins, hal::Watchdog, Delay) {
+pub fn init() -> (Pins, hal::Watchdog, Delay) {
     // setup peripherals
     let mut pac = hal::pac::Peripherals::take().unwrap();
 
@@ -48,7 +54,7 @@ pub fn init() -> (rp_pico::Pins, hal::Watchdog, Delay) {
 
     // setup clock at 125Mhz
     let clocks = hal::clocks::init_clocks_and_plls(
-        rp_pico::XOSC_CRYSTAL_FREQ,
+        XTAL_FREQ_HZ,
         pac.XOSC,
         pac.CLOCKS,
         pac.PLL_SYS,
@@ -59,7 +65,7 @@ pub fn init() -> (rp_pico::Pins, hal::Watchdog, Delay) {
     .ok()
     .unwrap();
 
-    let pins = rp_pico::Pins::new(
+    let pins = Pins::new(
         pac.IO_BANK0,
         pac.PADS_BANK0,
         sio.gpio_bank0,
@@ -111,7 +117,7 @@ pub fn init() -> (rp_pico::Pins, hal::Watchdog, Delay) {
     }
 
     unsafe {
-        hal::pac::NVIC::unmask(hal::pac::interrupt::USBCTRL_IRQ);
+        hal::pac::NVIC::unmask(hal::pac::Interrupt::USBCTRL_IRQ);
     };
 
     let core = hal::pac::CorePeripherals::take().unwrap();
@@ -178,7 +184,7 @@ pub fn matrix_scaning<const COLS: usize, const ROWS: usize, const LAYERS: usize>
                     } else {
                         match keycode {
                             Keycodes::KC_LAYER(x) => layer = x as usize,
-                            _ => {},
+                            _ => {}
                         }
                     }
                     delay.delay_ms(50);
@@ -191,7 +197,7 @@ pub fn matrix_scaning<const COLS: usize, const ROWS: usize, const LAYERS: usize>
                     } else {
                         match keycode {
                             Keycodes::KC_LAYER(x) => layer = x as usize,
-                            _ => {},
+                            _ => {}
                         }
                     }
                     delay.delay_ms(50);
