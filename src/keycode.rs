@@ -3,6 +3,8 @@ use self::Keycodes::*;
 #[allow(non_camel_case_types)]
 #[repr(u8)]
 pub enum Keycodes {
+    KC_NO = 0x00,
+
     KC_A = 0x04,
     KC_B = 0x05,
     KC_C = 0x06,
@@ -41,11 +43,41 @@ pub enum Keycodes {
     KC_9 = 0x26,
     KC_0 = 0x27,
 
+    KC_ENTER = 0x28,
+    KC_ESCAPE = 0x29,
+    KC_BACKSPACE = 0x2A,
+    KC_TAB = 0x2B,
+    KC_SPACE = 0x2C,
+    KC_MINUS = 0x2D,
+    KC_EQUAL = 0x2E,
+    KC_LEFT_BRACKET = 0x002F,
+    KC_RIGHT_BRACKET = 0x0030,
+    KC_BACKSLASH = 0x0031,
+    // KC_NONUS_HASH = 0x0032,
+    KC_SEMICOLON = 0x0033,
+    KC_QUOTE = 0x0034,
+    KC_GRAVE = 0x0035,
+    KC_COMMA = 0x0036,
+    KC_DOT = 0x0037,
+    KC_SLASH = 0x0038,
+    KC_CAPS_LOCK = 0x0039,
+
     KC_MUTE = 0x7f,
     KC_VOLUP = 0x80,
     KC_VOLDOWN = 0x81,
 
+    KC_LEFT_CTRL = 0x00E0,
+    KC_LEFT_SHIFT = 0x00E1,
+    KC_LEFT_ALT = 0x00E2,
+    KC_LEFT_GUI = 0x00E3,
+    KC_RIGHT_CTRL = 0x00E4,
+    KC_RIGHT_SHIFT = 0x00E5,
+    KC_RIGHT_ALT = 0x00E6,
+    KC_RIGHT_GUI = 0x00E7,
+    KC_APP = 0x0065,
+
     KC_LAYER(u8),
+    KC_NO_KEY,
 }
 
 // impl From<u8> for Keycodes {
@@ -59,6 +91,8 @@ impl TryInto<u8> for Keycodes {
     type Error = &'static str;
     fn try_into(self) -> Result<u8, Self::Error> {
         match self {
+            KC_NO => Ok(0x00),
+
             KC_A => Ok(0x04),
             KC_B => Ok(0x05),
             KC_C => Ok(0x06),
@@ -101,7 +135,7 @@ impl TryInto<u8> for Keycodes {
             KC_VOLUP => Ok(0x80),
             KC_VOLDOWN => Ok(0x81),
 
-            _ =>Err("Can't convert non usb key code"),
+            _ => Err("Can't convert non usb key code"),
         }
     }
 }
