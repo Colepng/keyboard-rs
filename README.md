@@ -2,7 +2,7 @@
 Keyboard firmware written in rust 
 
 # Todo
-- [ ] abstraction for keycodes
+- [ ] abstraction for keycodes - in progress
 - [ ] layers
     - [x] switch layers
     - [ ] toggle layers
