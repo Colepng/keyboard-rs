@@ -33,26 +33,26 @@ fn main() -> ! {
 
     let config: Config = Config { encoder: true };
 
-    let encoder1 = Encoder {
-        channel_a: pins.gpio9.into(),
-        channel_b: pins.gpio8.into(),
-        actions_clock_wise: [KC_VOLDOWN],
-        actions_counter_clock_wise: [KC_VOLUP],
-    };
+    let encoder1 = Encoder::new(
+        pins.gpio9.into(),
+        pins.gpio8.into(),
+        [KC_VOLDOWN],
+        [KC_VOLUP],
+    );
 
-    let encoder2 = Encoder {
-        channel_a: pins.gpio7.into(),
-        channel_b: pins.gpio6.into(),
-        actions_clock_wise: [KC_VOLDOWN],
-        actions_counter_clock_wise: [KC_VOLUP],
-    };
+    let encoder2 = Encoder::new(
+        pins.gpio7.into(),
+        pins.gpio6.into(),
+        [KC_VOLDOWN],
+        [KC_VOLUP],
+    );
 
-    let encoder3 = Encoder {
-        channel_a: pins.gpio1.into(),
-        channel_b: pins.gpio0.into(),
-        actions_clock_wise: [KC_VOLDOWN],
-        actions_counter_clock_wise: [KC_VOLUP],
-    };
+    let encoder3 = Encoder::new(
+        pins.gpio1.into(),
+        pins.gpio0.into(),
+        [KC_VOLDOWN],
+        [KC_VOLUP],
+    );
 
     matrix_scaning(col, row, KEYS, Some(encoder1), config, watchdog, delay);
 }

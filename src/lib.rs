@@ -11,7 +11,7 @@ use embedded_hal::digital::v2::{InputPin, OutputPin};
 use fugit::ExtU32;
 use hal::pac::interrupt;
 use hal::Clock;
-use hardware::Encoder;
+use hardware::{Encoder, Dir};
 use keycode::Keycodes;
 use panic_halt as _;
 use rp2040_hal as hal;
@@ -121,7 +121,7 @@ pub fn init() -> (Pins, hal::Watchdog, Delay) {
     };
 
     let core = hal::pac::CorePeripherals::take().unwrap();
-    let mut delay = cortex_m::delay::Delay::new(core.SYST, clocks.system_clock.freq().to_Hz());
+    let delay = cortex_m::delay::Delay::new(core.SYST, clocks.system_clock.freq().to_Hz());
     (pins, watchdog, delay)
 }
 
@@ -142,8 +142,6 @@ pub fn matrix_scaning<const COLS: usize, const ROWS: usize, const LAYERS: usize>
         pin.into_readable_output();
     });
 
-    let mut last_state_a: bool = false;
-    let mut state_a: bool = false;
     let mut current_state = [[false; COLS]; ROWS];
     let mut old_current_state = current_state;
     if config.encoder {
@@ -155,7 +153,7 @@ pub fn matrix_scaning<const COLS: usize, const ROWS: usize, const LAYERS: usize>
         // If the excpect did not happend the first time it must mean that encoder was supplyed so
         // it's safe to unwrap it
         encoder.as_mut().unwrap().channel_b.into_pull_up_input();
-        last_state_a = encoder.as_mut().unwrap().channel_a.is_high().unwrap();
+        // last_state_a = encoder.as_mut().unwrap().channel_a.is_high().unwrap();
     }
 
     let mut layer = 0;
@@ -173,12 +171,15 @@ pub fn matrix_scaning<const COLS: usize, const ROWS: usize, const LAYERS: usize>
             leds: 0x00,
             keycodes: [0x00; 6],
         };
-
+        
         if config.encoder {
-            state_a = encoder.as_mut().unwrap().channel_a.is_high().unwrap();
-            if last_state_a != state_a && state_a {
-                if state_a != encoder.as_mut().unwrap().channel_b.is_high().unwrap() {
-                    let keycode = encoder.as_mut().unwrap().actions_clock_wise[layer];
+            let encoder = encoder.as_mut().unwrap();
+
+            encoder.update();
+            match encoder.dir {
+                Dir::Cw => {
+                    // report.keycodes[index] = 0x1e;
+                    let keycode = encoder.actions_clock_wise[layer];
                     if let Ok(keycode) = keycode.try_into() {
                         report.keycodes[index] = keycode;
                     } else {
@@ -189,22 +190,25 @@ pub fn matrix_scaning<const COLS: usize, const ROWS: usize, const LAYERS: usize>
                     }
                     delay.delay_ms(50);
                     push_keyboard_inputs(report).ok().unwrap_or(0);
-                    report.keycodes[0] = 0x00;
-                } else {
-                    let keycode = encoder.as_mut().unwrap().actions_counter_clock_wise[layer];
-                    if let Ok(keycode) = keycode.try_into() {
-                        report.keycodes[index] = keycode;
-                    } else {
-                        match keycode {
-                            Keycodes::KC_LAYER(x) => layer = x as usize,
-                            _ => {}
-                        }
-                    }
-                    delay.delay_ms(50);
-                    push_keyboard_inputs(report).ok().unwrap_or(0);
-                    report.keycodes[0] = 0x00;
+                    report.keycodes[index] = 0x00;
                 }
-            }
+                Dir::Cww => {
+                    // report.keycodes[index] = 0x1f;
+                    let keycode = encoder.actions_counter_clock_wise[layer];
+                    if let Ok(keycode) = keycode.try_into() {
+                        report.keycodes[index] = keycode;
+                    } else {
+                        match keycode {
+                            Keycodes::KC_LAYER(x) => layer = x as usize,
+                            _ => {}
+                        }
+                    }
+                    delay.delay_ms(50);
+                    push_keyboard_inputs(report).ok().unwrap_or(0);
+                    report.keycodes[index] = 0x00;
+                }
+                _ => {}
+            }    
         }
 
         for (col, pin) in cols.iter_mut().enumerate() {
@@ -231,9 +235,6 @@ pub fn matrix_scaning<const COLS: usize, const ROWS: usize, const LAYERS: usize>
         }
 
         push_keyboard_inputs(report).ok().unwrap_or(0);
-        if config.encoder {
-            last_state_a = state_a;
-        }
         old_current_state = current_state;
     }
 }

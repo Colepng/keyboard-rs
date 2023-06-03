@@ -24,12 +24,12 @@ fn main() -> ! {
 
     let config = Config { encoder: true };
 
-    let encoder = Encoder {
-        channel_a: pins.gpio22.into(),
-        channel_b: pins.gpio21.into(),
-        actions_clock_wise: [KC_VOLUP, KC_B],
-        actions_counter_clock_wise: [KC_VOLDOWN, KC_A],
-    };
+    let encoder = Encoder:: new(
+        pins.gpio22.into(),
+        pins.gpio21.into(),
+        [KC_VOLUP, KC_B],
+        [KC_VOLDOWN, KC_A],
+    );
 
     matrix_scaning(col, row, KEYS, Some(encoder), config, watchdog, delay);
 }
