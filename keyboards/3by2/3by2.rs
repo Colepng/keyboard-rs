@@ -28,5 +28,5 @@ fn main() -> ! {
 
     let config: Config = Default::default();
 
-    matrix_scaning(col, row, KEYS, None, config, watchdog, delay);
+    matrix_scaning(col, row, KEYS, None::<[Encoder<NUMOFLAYES>; 0]>, config, watchdog, delay);
 }

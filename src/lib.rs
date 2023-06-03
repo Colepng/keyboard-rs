@@ -125,11 +125,11 @@ pub fn init() -> (Pins, hal::Watchdog, Delay) {
     (pins, watchdog, delay)
 }
 
-pub fn matrix_scaning<const COLS: usize, const ROWS: usize, const LAYERS: usize>(
+pub fn matrix_scaning<const COLS: usize, const ROWS: usize, const LAYERS: usize, const NUM_OF_ENCODERS: usize>(
     mut cols: [DynPin; COLS],
     mut rows: [DynPin; ROWS],
     keys: [[[Keycodes; COLS]; ROWS]; LAYERS],
-    mut encoder: Option<Encoder<LAYERS>>,
+    mut encoders: Option<[Encoder<LAYERS>; NUM_OF_ENCODERS]>,
     // mut led: DynPin,
     config: Config,
     mut watchdog: hal::Watchdog,
@@ -145,15 +145,10 @@ pub fn matrix_scaning<const COLS: usize, const ROWS: usize, const LAYERS: usize>
     let mut current_state = [[false; COLS]; ROWS];
     let mut old_current_state = current_state;
     if config.encoder {
-        encoder
-            .as_mut()
-            .expect("If encoder is true, must supply a pin for channel_a")
-            .channel_a
-            .into_pull_up_input();
-        // If the excpect did not happend the first time it must mean that encoder was supplyed so
-        // it's safe to unwrap it
-        encoder.as_mut().unwrap().channel_b.into_pull_up_input();
-        // last_state_a = encoder.as_mut().unwrap().channel_a.is_high().unwrap();
+        for encoder in encoders.as_mut().expect("If encoders is true, must have at least 1 encoder").iter_mut() {
+            encoder.channel_a.into_pull_up_input();
+            encoder.channel_b.into_pull_up_input();
+        }
     }
 
     let mut layer = 0;
@@ -173,42 +168,42 @@ pub fn matrix_scaning<const COLS: usize, const ROWS: usize, const LAYERS: usize>
         };
         
         if config.encoder {
-            let encoder = encoder.as_mut().unwrap();
-
-            encoder.update();
-            match encoder.dir {
-                Dir::Cw => {
-                    // report.keycodes[index] = 0x1e;
-                    let keycode = encoder.actions_clock_wise[layer];
-                    if let Ok(keycode) = keycode.try_into() {
-                        report.keycodes[index] = keycode;
-                    } else {
-                        match keycode {
-                            Keycodes::KC_LAYER(x) => layer = x as usize,
-                            _ => {}
+            for encoder in encoders.as_mut().expect("If encoders is true, must have at least 1 encoder").iter_mut() {
+                encoder.update();
+                match encoder.dir {
+                    Dir::Cw => {
+                        // report.keycodes[index] = 0x1e;
+                        let keycode = encoder.actions_clock_wise[layer];
+                        if let Ok(keycode) = keycode.try_into() {
+                            report.keycodes[index] = keycode;
+                        } else {
+                            match keycode {
+                                Keycodes::KC_LAYER(x) => layer = x as usize,
+                                _ => {}
+                            }
                         }
+                        delay.delay_ms(50);
+                        push_keyboard_inputs(report).ok().unwrap_or(0);
+                        report.keycodes[index] = 0x00;
                     }
-                    delay.delay_ms(50);
-                    push_keyboard_inputs(report).ok().unwrap_or(0);
-                    report.keycodes[index] = 0x00;
-                }
-                Dir::Cww => {
-                    // report.keycodes[index] = 0x1f;
-                    let keycode = encoder.actions_counter_clock_wise[layer];
-                    if let Ok(keycode) = keycode.try_into() {
-                        report.keycodes[index] = keycode;
-                    } else {
-                        match keycode {
-                            Keycodes::KC_LAYER(x) => layer = x as usize,
-                            _ => {}
+                    Dir::Cww => {
+                        // report.keycodes[index] = 0x1f;
+                        let keycode = encoder.actions_counter_clock_wise[layer];
+                        if let Ok(keycode) = keycode.try_into() {
+                            report.keycodes[index] = keycode;
+                        } else {
+                            match keycode {
+                                Keycodes::KC_LAYER(x) => layer = x as usize,
+                                _ => {}
+                            }
                         }
+                        delay.delay_ms(50);
+                        push_keyboard_inputs(report).ok().unwrap_or(0);
+                        report.keycodes[index] = 0x00;
                     }
-                    delay.delay_ms(50);
-                    push_keyboard_inputs(report).ok().unwrap_or(0);
-                    report.keycodes[index] = 0x00;
-                }
-                _ => {}
-            }    
+                    _ => {}
+                }    
+            }
         }
 
         for (col, pin) in cols.iter_mut().enumerate() {

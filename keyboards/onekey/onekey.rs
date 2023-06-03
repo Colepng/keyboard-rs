@@ -31,5 +31,5 @@ fn main() -> ! {
         [KC_VOLDOWN, KC_A],
     );
 
-    matrix_scaning(col, row, KEYS, Some(encoder), config, watchdog, delay);
+    matrix_scaning(col, row, KEYS, Some([encoder]), config, watchdog, delay);
 }

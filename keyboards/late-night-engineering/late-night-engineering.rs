@@ -54,5 +54,5 @@ fn main() -> ! {
         [KC_VOLUP],
     );
 
-    matrix_scaning(col, row, KEYS, Some(encoder1), config, watchdog, delay);
+    matrix_scaning(col, row, KEYS, Some([encoder1, encoder2, encoder3]), config, watchdog, delay);
 }
