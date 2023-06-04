@@ -11,7 +11,7 @@ use embedded_hal::digital::v2::{InputPin, OutputPin};
 use fugit::ExtU32;
 use hal::pac::interrupt;
 use hal::Clock;
-use hardware::{Encoder, Dir};
+use hardware::{Dir, Encoder};
 use keycode::Keycodes;
 use panic_halt as _;
 use rp2040_hal as hal;
@@ -202,7 +202,7 @@ pub fn matrix_scaning<const COLS: usize, const ROWS: usize, const LAYERS: usize,
                         report.keycodes[index] = 0x00;
                     }
                     _ => {}
-                }    
+                }
             }
         }
 

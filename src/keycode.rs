@@ -53,7 +53,7 @@ pub enum Keycodes {
     KC_LEFT_BRACKET = 0x002F,
     KC_RIGHT_BRACKET = 0x0030,
     KC_BACKSLASH = 0x0031,
-    // KC_NONUS_HASH = 0x0032,
+    KC_NONUS_HASH = 0x0032,
     KC_SEMICOLON = 0x0033,
     KC_QUOTE = 0x0034,
     KC_GRAVE = 0x0035,
