@@ -149,6 +149,7 @@ pub fn matrix_scaning<const COLS: usize, const ROWS: usize, const LAYERS: usize,
 
     let mut current_state = [[false; COLS]; ROWS];
     let mut old_current_state = current_state;
+    let mut locked_keys = [[(false, 0); COLS]; ROWS];
 
     #[cfg(feature="encoders")]
     for encoder in encoders.iter_mut() {
@@ -156,13 +157,13 @@ pub fn matrix_scaning<const COLS: usize, const ROWS: usize, const LAYERS: usize,
         encoder.channel_b.into_pull_up_input();
     }
 
-    let mut layer = 0;
+    let mut layer: usize = 0;
+    let mut last_layer: usize = 0;
     let mut index: usize;
     let mut report: KeyboardReport;
     loop {
         // feed watchdog
         watchdog.feed();
-        // moving this outside of the loop can make this more effiecnt by checking if the key is pressed and not over writing it
         index = 0;
 
         report = KeyboardReport {
@@ -172,6 +173,47 @@ pub fn matrix_scaning<const COLS: usize, const ROWS: usize, const LAYERS: usize,
             keycodes: [0x00; 6],
         };
         
+        for (col, pin) in cols.iter_mut().enumerate() {
+            pin.set_high().unwrap();
+            for (row, pin) in rows.iter_mut().enumerate() {
+                if index <= 6 && pin.is_high().unwrap() {
+                    current_state[row][col] = true;
+                    // on press
+                    if !locked_keys[row][col].0 {
+                        match keys[layer][row][col] {
+                            Keycodes::KC_MO(x) => {
+                                // if !e[row][col] {
+                                locked_keys[row][col] = (true, layer);
+                                last_layer = layer;
+                                layer = x;
+                            }
+                            _ => {
+                                if let Ok(keycode) = keys[layer][row][col].try_into() {
+                                    report.keycodes[index] = keycode;
+                                    index += 1;
+                                }
+                            }
+                        }
+                    }
+                } else {
+                    // on release
+                    if old_current_state[row][col] {
+                        match keys[locked_keys[row][col].1][row][col] {
+                            Keycodes::KC_LAYER(x) => layer = x,
+                            Keycodes::KC_MO(_) => { 
+                                layer = last_layer;
+                                locked_keys[row][col] = (false, layer);
+                            }
+                            _ => {}
+                        }
+                    }
+                    current_state[row][col] = false;
+                }
+            }
+            pin.set_low().unwrap();
+        }
+
+
         #[cfg(feature="encoders")]
         for encoder in encoders.iter_mut() {
             encoder.update();
@@ -208,29 +250,6 @@ pub fn matrix_scaning<const COLS: usize, const ROWS: usize, const LAYERS: usize,
                 }
                 _ => {}
             }
-        }
-
-        for (col, pin) in cols.iter_mut().enumerate() {
-            pin.set_high().unwrap();
-            for (row, pin) in rows.iter_mut().enumerate() {
-                let temp = keys[layer][row][col].try_into();
-                if index <= 6 && pin.is_high().unwrap() {
-                    current_state[row][col] = true;
-                    if let Ok(keycode) = temp {
-                        report.keycodes[index] = keycode;
-                        index += 1;
-                    }
-                } else {
-                    if old_current_state[row][col] {
-                        match keys[layer][row][col] {
-                            Keycodes::KC_LAYER(x) => layer = x as usize,
-                            _ => {}
-                        }
-                    }
-                    current_state[row][col] = false;
-                }
-            }
-            pin.set_low().unwrap();
         }
 
         push_keyboard_inputs(report).ok().unwrap_or(0);

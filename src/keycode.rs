@@ -76,7 +76,8 @@ pub enum Keycodes {
     KC_RIGHT_GUI = 0x00E7,
     KC_APP = 0x0065,
 
-    KC_LAYER(u8),
+    KC_LAYER(usize),
+    KC_MO(usize),
     KC_NO_KEY,
 }
 

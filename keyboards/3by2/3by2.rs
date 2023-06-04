@@ -14,9 +14,9 @@ fn main() -> ! {
     const NUMOFROW: usize = 2;
     const NUMOFLAYES: usize = 3;
     const KEYS: [[[Keycodes; NUMOFCOL]; NUMOFROW]; NUMOFLAYES] = [
-        [[KC_A, KC_B, KC_C], [KC_D, KC_E, KC_LAYER(1)]],
-        [[KC_F, KC_G, KC_H], [KC_I, KC_J, KC_LAYER(2)]],
-        [[KC_K, KC_L, KC_M], [KC_N, KC_O, KC_LAYER(0)]],
+        [[KC_A, KC_B, KC_C], [KC_D, KC_E, KC_MO(1)]],
+        [[KC_F, KC_G, KC_H], [KC_I, KC_J, KC_1]],
+        [[KC_K, KC_L, KC_M], [KC_N, KC_O, KC_2]],
     ];
 
     let (pins, watchdog, delay) = init();

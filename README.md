@@ -6,7 +6,7 @@ Keyboard firmware written in rust
 - [ ] layers
     - [x] switch layers
     - [ ] toggle layers
-    - [ ] momentary layers
+    - [x] momentary layers
 - [ ] rotary encoders
     - [x] single rotary encoder support
     - [x] multi layer action support
