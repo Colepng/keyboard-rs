@@ -1,8 +1,6 @@
 #![no_std]
 #![no_main]
 
-use keyboardrs::config::*;
-use keyboardrs::hardware::Encoder;
 use keyboardrs::keycode::{Keycodes, Keycodes::*};
 use keyboardrs::{init, matrix_scaning};
 
@@ -26,7 +24,6 @@ fn main() -> ! {
     let col: [DynPin; NUMOFCOL] = [pins.gpio28.into(), pins.gpio26.into(), pins.gpio17.into()];
     let row: [DynPin; NUMOFROW] = [pins.gpio16.into(), pins.gpio15.into()];
 
-    let config: Config = Default::default();
+    matrix_scaning(col, row, KEYS, watchdog, delay);
 
-    matrix_scaning(col, row, KEYS, None::<[Encoder<NUMOFLAYES>; 0]>, config, watchdog, delay);
 }

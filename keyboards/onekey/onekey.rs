@@ -22,8 +22,6 @@ fn main() -> ! {
     let col: [DynPin; NUMOFCOL] = [pins.gpio27.into()];
     let row: [DynPin; NUMOFROW] = [pins.gpio18.into()];
 
-    let config = Config { encoder: true };
-
     let encoder = Encoder:: new(
         pins.gpio22.into(),
         pins.gpio21.into(),
@@ -31,5 +29,5 @@ fn main() -> ! {
         [KC_VOLDOWN, KC_A],
     );
 
-    matrix_scaning(col, row, KEYS, Some([encoder]), config, watchdog, delay);
+    matrix_scaning(col, row, KEYS, [encoder], watchdog, delay);
 }

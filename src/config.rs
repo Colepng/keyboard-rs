@@ -1,4 +1,4 @@
-#[derive(Default)]
-pub struct Config {
-    pub encoder: bool,
-}
+// #[derive(Default)]
+// pub struct Config {
+//     pub encoder: bool,
+// }

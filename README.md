@@ -19,3 +19,7 @@ Keyboard firmware written in rust
 - [ ] mouse keys
 - [ ] oled display support
 - [ ] led support
+
+# Example warnings
+both onekey and late-night-engineering need the encoders feature to be enabled when building
+normally if you would enable when your declaring this library as a dependency
