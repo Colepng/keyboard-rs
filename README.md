@@ -12,6 +12,7 @@ Keyboard firmware written in rust
     - [x] multi layer action support
     - [x] multi rotary encoder support
     - [ ] action on holding down and rotating
+- [ ] NKRO
 - [ ] macros
 - [ ] row2col scanning
 - [ ] duplex matrix scanning
