@@ -21,5 +21,5 @@ Keyboard firmware written in rust
 - [ ] led support
 
 # Example warnings
-both onekey and late-night-engineering need the encoders feature to be enabled when building
-normally if you would enable when your declaring this library as a dependency
+both onekey and late-night-engineering need the encoders feature to be enabled when building.
+Normally if you would enable it when you are declaring this library as a dependency
