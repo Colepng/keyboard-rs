@@ -13,13 +13,20 @@ use rp_pico::hal::gpio::DynPin;
 fn main() -> ! {
     const NUMOFCOL: usize = 14;
     const NUMOFROW: usize = 5;
-    const NUMOFLAYES: usize = 1;
+    const NUMOFLAYES: usize = 2;
 
     const KEYS: [[[Keycodes; NUMOFCOL]; NUMOFROW]; NUMOFLAYES] = [
         [
             [KC_ESCAPE,     KC_1,       KC_2,       KC_3,       KC_4,       KC_5, KC_6, KC_7, KC_8, KC_9, KC_0, KC_MINUS, KC_EQUAL, KC_BACKSPACE], 
             [KC_TAB, KC_Q,  KC_W,       KC_E,       KC_R,       KC_T,       KC_Y, KC_U, KC_I, KC_O, KC_P, KC_LEFT_BRACKET, KC_RIGHT_BRACKET, KC_SLASH], 
             [KC_CAPS_LOCK,  KC_NO_KEY,  KC_A,       KC_S,       KC_D,       KC_F, KC_G, KC_H, KC_J, KC_K, KC_L, KC_SEMICOLON, KC_QUOTE, KC_ENTER], 
+            [KC_LEFT_SHIFT, KC_NO_KEY,  KC_Z,       KC_X,       KC_C,       KC_V, KC_B, KC_N, KC_M, KC_COMMA, KC_DOT, KC_SLASH, KC_NO_KEY, KC_RIGHT_SHIFT], 
+            [KC_LEFT_CTRL,  KC_LEFT_GUI,KC_NO_KEY,  KC_LEFT_ALT,KC_NO_KEY, KC_NO_KEY, KC_NO_KEY, KC_SPACE, KC_NO_KEY, KC_NO_KEY, KC_RIGHT_ALT, KC_MO(1), KC_APP, KC_RIGHT_CTRL],
+        ],
+        [
+            [KC_ESCAPE,     KC_1,       KC_2,       KC_3,       KC_4,       KC_5, KC_6, KC_7, KC_8, KC_9, KC_0, KC_MINUS, KC_EQUAL, KC_BACKSPACE], 
+            [KC_TAB, KC_Q,  KC_UP_ARROW,       KC_E,       KC_R,       KC_T,       KC_Y, KC_U, KC_I, KC_O, KC_P, KC_LEFT_BRACKET, KC_RIGHT_BRACKET, KC_SLASH], 
+            [KC_CAPS_LOCK,  KC_NO_KEY,  KC_LEFT_ARROW,       KC_DOWN_ARROW,       KC_RIGHT_ARROW,       KC_F, KC_G, KC_H, KC_J, KC_K, KC_L, KC_SEMICOLON, KC_QUOTE, KC_ENTER], 
             [KC_LEFT_SHIFT, KC_NO_KEY,  KC_Z,       KC_X,       KC_C,       KC_V, KC_B, KC_N, KC_M, KC_COMMA, KC_DOT, KC_SLASH, KC_NO_KEY, KC_RIGHT_SHIFT], 
             [KC_LEFT_CTRL,  KC_LEFT_GUI,KC_NO_KEY,  KC_LEFT_ALT,KC_NO_KEY, KC_NO_KEY, KC_NO_KEY, KC_SPACE, KC_NO_KEY, KC_NO_KEY, KC_RIGHT_ALT, KC_RIGHT_GUI, KC_APP, KC_RIGHT_CTRL],
         ],
@@ -33,22 +40,22 @@ fn main() -> ! {
     let encoder1 = Encoder::new(
         pins.gpio9.into(),
         pins.gpio8.into(),
-        [KC_VOLDOWN],
-        [KC_VOLUP],
+        [KC_VOLDOWN, KC_NO],
+        [KC_VOLUP, KC_NO],
     );
 
     let encoder2 = Encoder::new(
         pins.gpio7.into(),
         pins.gpio6.into(),
-        [KC_VOLDOWN],
-        [KC_VOLUP],
+        [KC_MINUS, KC_NO],
+        [KC_VOLUP, KC_NO],
     );
 
     let encoder3 = Encoder::new(
         pins.gpio1.into(),
         pins.gpio0.into(),
-        [KC_VOLDOWN],
-        [KC_VOLUP],
+        [KC_VOLUP, KC_NO],
+        [KC_VOLDOWN, KC_NO],
     );
 
     matrix_scaning(col, row, KEYS, [encoder1, encoder2, encoder3], watchdog, delay);

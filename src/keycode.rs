@@ -1,6 +1,6 @@
 use self::Keycodes::*;
 #[derive(Copy, Clone)]
-#[allow(non_camel_case_types)]
+#[allow(non_camel_case_types, unused)]
 #[repr(u8)]
 pub enum Keycodes {
     KC_NO = 0x00,
@@ -61,6 +61,11 @@ pub enum Keycodes {
     KC_DOT = 0x37,
     KC_SLASH = 0x38,
     KC_CAPS_LOCK = 0x39,
+
+    KC_RIGHT_ARROW = 0x4F,
+    KC_LEFT_ARROW = 0x50,
+    KC_DOWN_ARROW = 0x51,
+    KC_UP_ARROW = 0x52,
 
     KC_MUTE = 0x7f,
     KC_VOLUP = 0x80,
@@ -151,6 +156,11 @@ impl TryInto<u8> for Keycodes {
             KC_SLASH => Ok(0x38),
             KC_CAPS_LOCK => Ok(0x39),
 
+            KC_RIGHT_ARROW => Ok(0x4F),
+            KC_LEFT_ARROW => Ok(0x50),
+            KC_DOWN_ARROW => Ok(0x51),
+            KC_UP_ARROW => Ok(0x52),
+
             KC_MUTE => Ok(0x7f),
             KC_VOLUP => Ok(0x80),
             KC_VOLDOWN => Ok(0x81),
@@ -166,6 +176,50 @@ impl TryInto<u8> for Keycodes {
             KC_APP => Ok(0x65),
 
             _ => Err("Can't convert non usb key code"),
+        }
+    }
+}
+
+#[derive(Copy, Clone)]
+#[allow(non_camel_case_types, unused)]
+#[repr(u8)]
+pub enum Modifers {
+    MOD_LCTRL   = 0b00000001,
+    MOD_LSHIFT  = 0b00000010,
+    MOD_LALT    = 0b00000100,
+    MOD_LGUI    = 0b00001000,
+    MOD_RCTRL   = 0b00010000,
+    MOD_RSHIFT  = 0b00100000,
+    MOD_RALT    = 0b01000000,
+    MOD_RGUI    = 0b10000000,
+}
+
+// impl From<u8> for Modifers {
+//     fn from(value: u8) -> Self {
+//         match value {
+//             0b00000001 => Modifers::MOD_LCTRL,
+//             0b00000010 => Modifers::MOD_LSHIFT,
+//             0b00000100 => Modifers::MOD_LALT,
+//             0b00001000 => Modifers::MOD_LGUI,
+//             0b00010000 => Modifers::MOD_RCTRL,
+//             0b00100000 => Modifers::MOD_RSHIFT,
+//             0b01000000 => Modifers::MOD_RALT,
+//             0b10000000 => Modifers::MOD_RGUI,
+//         }
+//     }
+// }
+
+impl Into<u8> for Modifers {
+    fn into(self) -> u8 {
+        match self {
+            Self::MOD_LCTRL   => 0b00000001,
+            Self::MOD_LSHIFT  => 0b00000010,
+            Self::MOD_LALT    => 0b00000100,
+            Self::MOD_LGUI    => 0b00001000,
+            Self::MOD_RCTRL   => 0b00010000,
+            Self::MOD_RSHIFT  => 0b00100000,
+            Self::MOD_RALT    => 0b01000000,
+            Self::MOD_RGUI    => 0b10000000,
         }
     }
 }

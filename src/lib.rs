@@ -14,7 +14,7 @@ use hal::pac::interrupt;
 use hal::Clock;
 #[cfg(feature="encoders")]
 use hardware::{Dir, Encoder};
-use keycode::Keycodes;
+use keycode::{Keycodes, Modifers};
 use panic_halt as _;
 use rp2040_hal as hal;
 use rp2040_hal::gpio::{DynPin, Pins};
@@ -186,6 +186,30 @@ pub fn matrix_scaning<const COLS: usize, const ROWS: usize, const LAYERS: usize,
                                 locked_keys[row][col] = (true, layer);
                                 last_layer = layer;
                                 layer = x;
+                            }
+                            Keycodes::KC_LEFT_CTRL => {
+                                    report.modifier |= Modifers::MOD_LCTRL as u8;
+                            }
+                            Keycodes::KC_LEFT_SHIFT => {
+                                    report.modifier |= Modifers::MOD_LSHIFT as u8;
+                            }
+                            Keycodes::KC_LEFT_ALT => {
+                                    report.modifier |= Modifers::MOD_LALT as u8;
+                            }
+                            Keycodes::KC_LEFT_GUI => {
+                                    report.modifier |= Modifers::MOD_LGUI as u8;
+                            }
+                            Keycodes::KC_RIGHT_CTRL => {
+                                    report.modifier |= Modifers::MOD_LCTRL as u8;
+                            }
+                            Keycodes::KC_RIGHT_SHIFT => {
+                                    report.modifier |= Modifers::MOD_RSHIFT as u8;
+                            }
+                            Keycodes::KC_RIGHT_ALT => {
+                                    report.modifier |= Modifers::MOD_RALT as u8;
+                            }
+                            Keycodes::KC_RIGHT_GUI => {
+                                    report.modifier |= Modifers::MOD_RGUI as u8;
                             }
                             _ => {
                                 if let Ok(keycode) = keys[layer][row][col].try_into() {
