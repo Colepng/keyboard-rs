@@ -5,6 +5,7 @@ pub mod config;
 #[cfg(feature="encoders")]
 pub mod hardware;
 pub mod keycode;
+mod keyboard;
 // use config::Config;
 use cortex_m::delay::Delay;
 use cortex_m::prelude::{_embedded_hal_watchdog_Watchdog, _embedded_hal_watchdog_WatchdogEnable};
@@ -13,8 +14,9 @@ use fugit::ExtU32;
 use hal::pac::interrupt;
 use hal::Clock;
 #[cfg(feature="encoders")]
-use hardware::{Dir, Encoder};
-use keycode::{Keycodes, Modifers};
+use hardware::Encoder;
+use keycode::Keycodes;
+use keyboard::Keyboard;
 use panic_halt as _;
 use rp2040_hal as hal;
 use rp2040_hal::gpio::{DynPin, Pins};
@@ -147,9 +149,7 @@ pub fn matrix_scaning<const COLS: usize, const ROWS: usize, const LAYERS: usize,
         pin.into_readable_output();
     });
 
-    let mut current_state = [[false; COLS]; ROWS];
-    let mut old_current_state = current_state;
-    let mut locked_keys = [[(false, 0); COLS]; ROWS];
+    let mut keyboard = Keyboard::<COLS, ROWS, LAYERS>::new();
 
     #[cfg(feature="encoders")]
     for encoder in encoders.iter_mut() {
@@ -157,81 +157,19 @@ pub fn matrix_scaning<const COLS: usize, const ROWS: usize, const LAYERS: usize,
         encoder.channel_b.into_pull_up_input();
     }
 
-    let mut layer: usize = 0;
-    let mut last_layer: usize = 0;
-    let mut index: usize;
-    let mut report: KeyboardReport;
     loop {
         // feed watchdog
         watchdog.feed();
-        index = 0;
 
-        report = KeyboardReport {
-            modifier: 0x00,
-            reserved: 0x00,
-            leds: 0x00,
-            keycodes: [0x00; 6],
-        };
-        
         for (col, pin) in cols.iter_mut().enumerate() {
             pin.set_high().unwrap();
             for (row, pin) in rows.iter_mut().enumerate() {
-                if index <= 6 && pin.is_high().unwrap() {
-                    current_state[row][col] = true;
+                if keyboard.index <= 6 && pin.is_high().unwrap() {
                     // on press
-                    if !locked_keys[row][col].0 {
-                        match keys[layer][row][col] {
-                            Keycodes::KC_MO(x) => {
-                                // if !e[row][col] {
-                                locked_keys[row][col] = (true, layer);
-                                last_layer = layer;
-                                layer = x;
-                            }
-                            Keycodes::KC_LEFT_CTRL => {
-                                    report.modifier |= Modifers::MOD_LCTRL as u8;
-                            }
-                            Keycodes::KC_LEFT_SHIFT => {
-                                    report.modifier |= Modifers::MOD_LSHIFT as u8;
-                            }
-                            Keycodes::KC_LEFT_ALT => {
-                                    report.modifier |= Modifers::MOD_LALT as u8;
-                            }
-                            Keycodes::KC_LEFT_GUI => {
-                                    report.modifier |= Modifers::MOD_LGUI as u8;
-                            }
-                            Keycodes::KC_RIGHT_CTRL => {
-                                    report.modifier |= Modifers::MOD_LCTRL as u8;
-                            }
-                            Keycodes::KC_RIGHT_SHIFT => {
-                                    report.modifier |= Modifers::MOD_RSHIFT as u8;
-                            }
-                            Keycodes::KC_RIGHT_ALT => {
-                                    report.modifier |= Modifers::MOD_RALT as u8;
-                            }
-                            Keycodes::KC_RIGHT_GUI => {
-                                    report.modifier |= Modifers::MOD_RGUI as u8;
-                            }
-                            _ => {
-                                if let Ok(keycode) = keys[layer][row][col].try_into() {
-                                    report.keycodes[index] = keycode;
-                                    index += 1;
-                                }
-                            }
-                        }
-                    }
+                    keyboard.key_press(keys[keyboard.layer][row][col], col, row);
                 } else {
                     // on release
-                    if old_current_state[row][col] {
-                        match keys[locked_keys[row][col].1][row][col] {
-                            Keycodes::KC_LAYER(x) => layer = x,
-                            Keycodes::KC_MO(_) => { 
-                                layer = last_layer;
-                                locked_keys[row][col] = (false, layer);
-                            }
-                            _ => {}
-                        }
-                    }
-                    current_state[row][col] = false;
+                    keyboard.key_release(keys, col, row);
                 }
             }
             pin.set_low().unwrap();
@@ -240,44 +178,12 @@ pub fn matrix_scaning<const COLS: usize, const ROWS: usize, const LAYERS: usize,
 
         #[cfg(feature="encoders")]
         for encoder in encoders.iter_mut() {
-            encoder.update();
-            match encoder.dir {
-                Dir::Cw => {
-                    // report.keycodes[index] = 0x1e;
-                    let keycode = encoder.actions_clock_wise[layer];
-                    if let Ok(keycode) = keycode.try_into() {
-                        report.keycodes[index] = keycode;
-                    } else {
-                        match keycode {
-                            Keycodes::KC_LAYER(x) => layer = x as usize,
-                            _ => {}
-                        }
-                    }
-                    delay.delay_ms(50);
-                    push_keyboard_inputs(report).ok().unwrap_or(0);
-                    report.keycodes[index] = 0x00;
-                }
-                Dir::Cww => {
-                    // report.keycodes[index] = 0x1f;
-                    let keycode = encoder.actions_counter_clock_wise[layer];
-                    if let Ok(keycode) = keycode.try_into() {
-                        report.keycodes[index] = keycode;
-                    } else {
-                        match keycode {
-                            Keycodes::KC_LAYER(x) => layer = x as usize,
-                            _ => {}
-                        }
-                    }
-                    delay.delay_ms(50);
-                    push_keyboard_inputs(report).ok().unwrap_or(0);
-                    report.keycodes[index] = 0x00;
-                }
-                _ => {}
-            }
+            keyboard.update_encoder(encoder, &mut delay);
         }
 
-        push_keyboard_inputs(report).ok().unwrap_or(0);
-        old_current_state = current_state;
+        push_keyboard_inputs(keyboard.report).ok().unwrap_or(0);
+        keyboard.update_state();
+        keyboard.reset();
     }
 }
 

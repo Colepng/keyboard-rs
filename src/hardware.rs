@@ -58,4 +58,5 @@ impl<const LAYERS: usize> Encoder<LAYERS> {
             self.dir = Dir::Same;
         }
     }
+
 }
