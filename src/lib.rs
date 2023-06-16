@@ -5,6 +5,7 @@ pub mod config;
 #[cfg(feature="encoders")]
 pub mod hardware;
 pub mod keycode;
+mod usb;
 mod keyboard;
 // use config::Config;
 use cortex_m::delay::Delay;
@@ -27,9 +28,11 @@ use usb_device::{
 
 // USB Human Interface Device (HID) Class support
 // use usbd_hid::descriptor::generator_prelude::*;
-use usbd_hid::descriptor::KeyboardReport;
+use usbd_hid::descriptor::AsInputReport;
 use usbd_hid::descriptor::SerializedDescriptor;
 use usbd_hid::hid_class;
+
+use usb::Report;
 
 /// The USB Device Driver (shared with the interrupt).
 static mut USB_DEVICE: Option<UsbDevice<hal::usb::UsbBus>> = None;
@@ -94,7 +97,7 @@ pub fn init() -> (Pins, hal::Watchdog, Delay) {
     // Setup usb hid class
     let usb_hid = hid_class::HIDClass::new_ep_in_with_settings(
         bus_ref,
-        KeyboardReport::desc(),
+        Report::desc(),
         60,
         hid_class::HidClassSettings {
             subclass: hid_class::HidSubClass::NoSubClass,
@@ -158,17 +161,20 @@ pub fn matrix_scaning<const COLS: usize, const ROWS: usize, const LAYERS: usize,
     }
 
     loop {
+
         // feed watchdog
         watchdog.feed();
 
         for (col, pin) in cols.iter_mut().enumerate() {
             pin.set_high().unwrap();
             for (row, pin) in rows.iter_mut().enumerate() {
-                if keyboard.index <= 6 && pin.is_high().unwrap() {
+                if pin.is_high().unwrap() && keyboard.index <= 10 {
                     // on press
                     keyboard.key_press(keys[keyboard.layer][row][col], col, row);
                 } else {
                     // on release
+                    // logic to check if key was pressed last scan in inside the function
+                    // move out later.
                     keyboard.key_release(keys, col, row);
                 }
             }
@@ -181,13 +187,13 @@ pub fn matrix_scaning<const COLS: usize, const ROWS: usize, const LAYERS: usize,
             keyboard.update_encoder(encoder, &mut delay);
         }
 
-        push_keyboard_inputs(keyboard.report).ok().unwrap_or(0);
+        push_input_report(keyboard.report).ok().unwrap_or(0);
         keyboard.update_state();
         keyboard.reset();
     }
 }
 
-fn push_keyboard_inputs(report: KeyboardReport) -> Result<usize, usb_device::UsbError> {
+fn push_input_report<T: AsInputReport>(report: T) -> Result<usize, usb_device::UsbError> {
     critical_section::with(|_| unsafe {
         // Now interrupts are disabled, grab the global variable and, if
         // available, send it a HID report

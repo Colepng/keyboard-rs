@@ -1,10 +1,12 @@
+#[cfg(feature="encoders")]
 use cortex_m::delay::Delay;
-use usbd_hid::descriptor::KeyboardReport;
 
 use crate::keycode::{Keycodes, Modifers};
-use crate::push_keyboard_inputs;
+#[cfg(feature="encoders")]
+use crate::push_input_report;
 #[cfg(feature="encoders")]
 use crate::hardware::{Dir, Encoder};
+use crate::usb::Report;
 
 pub struct Keyboard<const COLS: usize, const ROWS: usize, const LAYERS: usize> {
     current_state: [[bool; COLS]; ROWS],
@@ -13,7 +15,8 @@ pub struct Keyboard<const COLS: usize, const ROWS: usize, const LAYERS: usize> {
     pub layer: usize,
     last_layer: usize,
     pub index: usize,
-    pub report: KeyboardReport,
+    // pub report: KeyboardReport,
+    pub report: Report,
 }
 
 impl<const COLS: usize, const ROWS: usize, const LAYERS: usize> Keyboard<COLS, ROWS, LAYERS> {
@@ -25,7 +28,8 @@ impl<const COLS: usize, const ROWS: usize, const LAYERS: usize> Keyboard<COLS, R
             layer: 0,
             last_layer: 0,
             index: 0,
-            report: KeyboardReport { modifier: 0x00, reserved: 0x00, leds: 0x00, keycodes: [0x00; 6] },
+            // report: KeyboardReport { modifier: 0x00, reserved: 0x00, leds: 0x00, keycodes: [0x00; 6] },
+            report: Report::default(),
         }
     }
 
@@ -64,14 +68,23 @@ impl<const COLS: usize, const ROWS: usize, const LAYERS: usize> Keyboard<COLS, R
                 Keycodes::KC_RIGHT_GUI => {
                     self.report.modifier |= Modifers::MOD_RGUI as u8;
                 }
+                _ if keycode.is_consumer() => {
+                    if let Ok(keycode) = keycode.try_into() {
+                        self.report.consumer_control = keycode;
+                    }
+                }
                 _ => {
                     if let Ok(keycode) = keycode.try_into() {
-                        self.report.keycodes[self.index] = keycode;
-                        self.index += 1;
+                        self.add_key(keycode);
                     }
                 }
             }
         }
+    }
+
+    fn add_key(&mut self, keycode: u8) {
+        self.report.keycodes[self.index] = keycode;
+        self.index += 1;
     }
 
     pub fn key_release(&mut self, keys: [[[Keycodes; COLS]; ROWS]; LAYERS], col: usize, row: usize) {
@@ -88,13 +101,15 @@ impl<const COLS: usize, const ROWS: usize, const LAYERS: usize> Keyboard<COLS, R
         self.current_state[row][col] = false;
     }
 
+    #[cfg(feature="encoders")]
     pub fn update_encoder(&mut self, encoder: &mut Encoder<LAYERS>, delay: &mut Delay) {
         encoder.update();
         match encoder.dir {
             Dir::Cw => {
                 let keycode = encoder.actions_clock_wise[self.layer];
                 if let Ok(keycode) = keycode.try_into() {
-                    self.report.keycodes[self.index] = keycode;
+                    // self.report.keycodes[self.index] = keycode;
+                    self.add_key(keycode);
                 } else {
                     match keycode {
                         Keycodes::KC_LAYER(x) => self.layer = x as usize,
@@ -102,13 +117,14 @@ impl<const COLS: usize, const ROWS: usize, const LAYERS: usize> Keyboard<COLS, R
                     }
                 }
                 delay.delay_ms(30);
-                push_keyboard_inputs(self.report).ok().unwrap_or(0);
-                self.report.keycodes[self.index] = 0x00;
+                push_input_report(self.report).ok().unwrap_or(0);
+                // self.report.keycodes[self.index] = 0x00;
             }
             Dir::Cww => {
                 let keycode = encoder.actions_counter_clock_wise[self.layer];
                 if let Ok(keycode) = keycode.try_into() {
-                    self.report.keycodes[self.index] = keycode;
+                    // self.report.keycodes[self.index] = keycode;
+                    self.add_key(keycode);
                 } else {
                     match keycode {
                         Keycodes::KC_LAYER(x) => self.layer = x as usize,
@@ -116,8 +132,8 @@ impl<const COLS: usize, const ROWS: usize, const LAYERS: usize> Keyboard<COLS, R
                     }
                 }
                 delay.delay_ms(30);
-                push_keyboard_inputs(self.report).ok().unwrap_or(0);
-                self.report.keycodes[self.index] = 0x00;
+                push_input_report(self.report).ok().unwrap_or(0);
+                // self.report.keycodes[self.index] = 0x00;
             }
             _ => {}
         }
@@ -129,6 +145,7 @@ impl<const COLS: usize, const ROWS: usize, const LAYERS: usize> Keyboard<COLS, R
 
     pub fn reset(&mut self) {
         self.index = 0;
-        self.report = KeyboardReport { modifier: 0x00, reserved: 0x00, leds: 0x00, keycodes: [0x00; 6] };
+        // self.report = KeyboardReport { modifier: 0x00, reserved: 0x00, leds: 0x00, keycodes: [0x00; 6] };
+        self.report = Report::default();
     }
 }
