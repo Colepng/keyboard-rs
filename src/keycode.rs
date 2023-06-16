@@ -83,7 +83,10 @@ pub enum Keycodes {
     KC_RIGHT_GUI = 0xE7,
     KC_APP = 0x65,
 
-    KC_MPREV = 0xB5,
+    KC_MNEXT = 0xB5,
+    KC_MPREV = 0xB6,
+    KC_MSTOP = 0xB7,
+    KC_MPLAY_PAUSE = 0xCD,
 
     KC_LAYER(usize),
     KC_MO(usize),
@@ -94,6 +97,9 @@ impl Keycodes {
     pub fn is_consumer(&self) -> bool {
         match self {
             Self::KC_MPREV => true,
+            Self::KC_MNEXT => true,
+            Self::KC_MSTOP => true,
+            Self::KC_MPLAY_PAUSE => true,
             _ => false,
         }
     }
@@ -190,7 +196,10 @@ impl TryInto<u8> for Keycodes {
             KC_RIGHT_GUI => Ok(0xE7),
             KC_APP => Ok(0x65),
 
-            KC_MPREV => Ok(0xCD),
+            KC_MNEXT => Ok(0xB5),
+            KC_MPREV => Ok(0xB6),
+            KC_MSTOP => Ok(0xB7),
+            KC_MPLAY_PAUSE => Ok(0xCD),
 
             _ => Err("Can't convert non usb key code"),
         }
