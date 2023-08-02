@@ -13,6 +13,8 @@ fn main() -> ! {
     const NUMOFCOL: usize = 3;
     const NUMOFROW: usize = 2;
     const NUMOFLAYES: usize = 3;
+
+    #[rustfmt::skip]
     const KEYS: [[[Keycodes; NUMOFCOL]; NUMOFROW]; NUMOFLAYES] = [
         [[KC_A, KC_B, KC_C], [KC_D, KC_E, KC_MO(1)]],
         [[KC_F, KC_G, KC_H], [KC_I, KC_J, KC_1]],
@@ -25,5 +27,4 @@ fn main() -> ! {
     let row: [DynPin; NUMOFROW] = [pins.gpio16.into(), pins.gpio15.into()];
 
     matrix_scaning(col, row, KEYS, watchdog, delay);
-
 }

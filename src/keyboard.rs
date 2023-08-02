@@ -1,11 +1,11 @@
-#[cfg(feature="encoders")]
+#[cfg(feature = "encoders")]
 use cortex_m::delay::Delay;
 
-use crate::keycode::{Keycodes, Modifers};
-#[cfg(feature="encoders")]
-use crate::push_input_report;
-#[cfg(feature="encoders")]
+#[cfg(feature = "encoders")]
 use crate::hardware::{Dir, Encoder};
+use crate::keycode::{Keycodes, Modifers};
+#[cfg(feature = "encoders")]
+use crate::push_input_report;
 use crate::usb::Report;
 
 pub struct Keyboard<const COLS: usize, const ROWS: usize, const LAYERS: usize> {
@@ -91,7 +91,7 @@ impl<const COLS: usize, const ROWS: usize, const LAYERS: usize> Keyboard<COLS, R
         if self.old_current_state[row][col] {
             match keys[self.locked_keys[row][col].1][row][col] {
                 Keycodes::KC_LAYER(x) => self.layer = x,
-                Keycodes::KC_MO(_) => { 
+                Keycodes::KC_MO(_) => {
                     self.layer = self.last_layer;
                     self.locked_keys[row][col] = (false, self.layer);
                 }
@@ -101,7 +101,7 @@ impl<const COLS: usize, const ROWS: usize, const LAYERS: usize> Keyboard<COLS, R
         self.current_state[row][col] = false;
     }
 
-    #[cfg(feature="encoders")]
+    #[cfg(feature = "encoders")]
     pub fn update_encoder(&mut self, encoder: &mut Encoder<LAYERS>, delay: &mut Delay) {
         encoder.update();
         match encoder.dir {
@@ -118,7 +118,6 @@ impl<const COLS: usize, const ROWS: usize, const LAYERS: usize> Keyboard<COLS, R
                 }
                 delay.delay_ms(30);
                 push_input_report(self.report).ok().unwrap_or(0);
-                // self.report.keycodes[self.index] = 0x00;
             }
             Dir::Cww => {
                 let keycode = encoder.actions_counter_clock_wise[self.layer];
@@ -133,7 +132,6 @@ impl<const COLS: usize, const ROWS: usize, const LAYERS: usize> Keyboard<COLS, R
                 }
                 delay.delay_ms(30);
                 push_input_report(self.report).ok().unwrap_or(0);
-                // self.report.keycodes[self.index] = 0x00;
             }
             _ => {}
         }

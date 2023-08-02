@@ -40,7 +40,8 @@ impl<const LAYERS: usize> Encoder<LAYERS> {
     }
 
     pub fn update(&mut self) {
-        let new_state: u8 = (self.channel_a.is_high().unwrap() as u8) << 1 | (self.channel_b.is_high().unwrap() as u8) << 0;
+        #[rustfmt::skip]
+        let new_state: u8 = (self.channel_a.is_high().unwrap() as u8) << 1 | (self.channel_b.is_high().unwrap() as u8);
         if self.state & 0b0011 != new_state {
             self.state <<= 2;
             self.state |= new_state;
@@ -58,5 +59,4 @@ impl<const LAYERS: usize> Encoder<LAYERS> {
             self.dir = Dir::Same;
         }
     }
-
 }

@@ -15,6 +15,7 @@ fn main() -> ! {
     const NUMOFROW: usize = 5;
     const NUMOFLAYES: usize = 2;
 
+    #[rustfmt::skip]
     const KEYS: [[[Keycodes; NUMOFCOL]; NUMOFROW]; NUMOFLAYES] = [
         [
             [KC_ESCAPE,     KC_1,       KC_2,       KC_3,       KC_4,       KC_5, KC_6, KC_7, KC_8, KC_9, KC_0, KC_MINUS, KC_EQUAL, KC_BACKSPACE], 
@@ -34,8 +35,29 @@ fn main() -> ! {
 
     let (pins, watchdog, delay) = init();
 
-    let col: [DynPin; NUMOFCOL] = [pins.gpio26.into(), pins.gpio22.into(), pins.gpio16.into(), pins.gpio17.into(),pins.gpio18.into(),pins.gpio19.into(),pins.gpio20.into(),pins.gpio21.into(),pins.gpio10.into(),pins.gpio11.into(),pins.gpio12.into(),pins.gpio13.into(), pins.gpio14.into(), pins.gpio15.into()];
-    let row: [DynPin; NUMOFROW] = [pins.gpio28.into(), pins.gpio5.into(), pins.gpio4.into(), pins.gpio3.into(), pins.gpio2.into()];
+    let col: [DynPin; NUMOFCOL] = [
+        pins.gpio26.into(),
+        pins.gpio22.into(),
+        pins.gpio16.into(),
+        pins.gpio17.into(),
+        pins.gpio18.into(),
+        pins.gpio19.into(),
+        pins.gpio20.into(),
+        pins.gpio21.into(),
+        pins.gpio10.into(),
+        pins.gpio11.into(),
+        pins.gpio12.into(),
+        pins.gpio13.into(),
+        pins.gpio14.into(),
+        pins.gpio15.into(),
+    ];
+    let row: [DynPin; NUMOFROW] = [
+        pins.gpio28.into(),
+        pins.gpio5.into(),
+        pins.gpio4.into(),
+        pins.gpio3.into(),
+        pins.gpio2.into(),
+    ];
 
     let encoder1 = Encoder::new(
         pins.gpio9.into(),
@@ -58,5 +80,12 @@ fn main() -> ! {
         [KC_VOLDOWN, KC_NO],
     );
 
-    matrix_scaning(col, row, KEYS, [encoder1, encoder2, encoder3], watchdog, delay);
+    matrix_scaning(
+        col,
+        row,
+        KEYS,
+        [encoder1, encoder2, encoder3],
+        watchdog,
+        delay,
+    );
 }

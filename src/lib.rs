@@ -1,23 +1,21 @@
 #![no_std]
 #![no_main]
 
-pub mod config;
-#[cfg(feature="encoders")]
+#[cfg(feature = "encoders")]
 pub mod hardware;
+mod keyboard;
 pub mod keycode;
 mod usb;
-mod keyboard;
-// use config::Config;
 use cortex_m::delay::Delay;
 use cortex_m::prelude::{_embedded_hal_watchdog_Watchdog, _embedded_hal_watchdog_WatchdogEnable};
 use embedded_hal::digital::v2::{InputPin, OutputPin};
 use fugit::ExtU32;
 use hal::pac::interrupt;
 use hal::Clock;
-#[cfg(feature="encoders")]
+#[cfg(feature = "encoders")]
 use hardware::Encoder;
-use keycode::Keycodes;
 use keyboard::Keyboard;
+use keycode::Keycodes;
 use panic_halt as _;
 use rp2040_hal as hal;
 use rp2040_hal::gpio::{DynPin, Pins};
@@ -46,7 +44,6 @@ static mut USB_HID: Option<hid_class::HIDClass<hal::usb::UsbBus>> = None;
 /// External high-speed crystal on the Raspberry Pi Pico board is 12 MHz. Adjust
 /// if your board has a different frequency
 const XTAL_FREQ_HZ: u32 = 12_000_000u32;
-
 // maybe remove the watchdog in the future
 pub fn init() -> (Pins, hal::Watchdog, Delay) {
     // setup peripherals
@@ -132,16 +129,16 @@ pub fn init() -> (Pins, hal::Watchdog, Delay) {
     (pins, watchdog, delay)
 }
 
-pub fn matrix_scaning<const COLS: usize, const ROWS: usize, const LAYERS: usize, 
-    #[cfg(feature="encoders")]
-    const NUM_OF_ENCODERS: usize>(
+pub fn matrix_scaning<
+    const COLS: usize,
+    const ROWS: usize,
+    const LAYERS: usize,
+    #[cfg(feature = "encoders")] const NUM_OF_ENCODERS: usize,
+>(
     mut cols: [DynPin; COLS],
     mut rows: [DynPin; ROWS],
     keys: [[[Keycodes; COLS]; ROWS]; LAYERS],
-    #[cfg(feature="encoders")]
-    mut encoders: [Encoder<LAYERS>; NUM_OF_ENCODERS],
-    // #[cfg(feature="encoders")]
-    // config: Config,
+    #[cfg(feature = "encoders")] mut encoders: [Encoder<LAYERS>; NUM_OF_ENCODERS],
     mut watchdog: hal::Watchdog,
     mut delay: Delay,
 ) -> ! {
@@ -154,14 +151,13 @@ pub fn matrix_scaning<const COLS: usize, const ROWS: usize, const LAYERS: usize,
 
     let mut keyboard = Keyboard::<COLS, ROWS, LAYERS>::new();
 
-    #[cfg(feature="encoders")]
+    #[cfg(feature = "encoders")]
     for encoder in encoders.iter_mut() {
         encoder.channel_a.into_pull_up_input();
         encoder.channel_b.into_pull_up_input();
     }
 
     loop {
-
         // feed watchdog
         watchdog.feed();
 
@@ -173,16 +169,13 @@ pub fn matrix_scaning<const COLS: usize, const ROWS: usize, const LAYERS: usize,
                     keyboard.key_press(keys[keyboard.layer][row][col], col, row);
                 } else {
                     // on release
-                    // logic to check if key was pressed last scan in inside the function
-                    // move out later.
                     keyboard.key_release(keys, col, row);
                 }
             }
             pin.set_low().unwrap();
         }
 
-
-        #[cfg(feature="encoders")]
+        #[cfg(feature = "encoders")]
         for encoder in encoders.iter_mut() {
             keyboard.update_encoder(encoder, &mut delay);
         }

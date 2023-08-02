@@ -1,5 +1,5 @@
-use usbd_hid::descriptor::{gen_hid_descriptor, AsInputReport};
 use usbd_hid::descriptor::generator_prelude::*;
+use usbd_hid::descriptor::{gen_hid_descriptor, AsInputReport};
 
 #[gen_hid_descriptor(
     (collection = APPLICATION, usage_page = GENERIC_DESKTOP, usage = KEYBOARD) = {
@@ -25,6 +25,10 @@ pub struct Report {
 
 impl Default for Report {
     fn default() -> Self {
-        Report { modifier: 0x00, keycodes: [0x00; 10], consumer_control: 0x00 }
+        Report {
+            modifier: 0x00,
+            keycodes: [0x00; 10],
+            consumer_control: 0x00,
+        }
     }
 }
