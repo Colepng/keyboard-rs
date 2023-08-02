@@ -340,42 +340,27 @@ impl TryInto<u8> for &Keycodes {
 #[allow(non_camel_case_types, unused)]
 #[repr(u8)]
 pub enum Modifers {
-    MOD_LCTRL   = 0b00000001,
-    MOD_LSHIFT  = 0b00000010,
-    MOD_LALT    = 0b00000100,
-    MOD_LGUI    = 0b00001000,
-    MOD_RCTRL   = 0b00010000,
-    MOD_RSHIFT  = 0b00100000,
-    MOD_RALT    = 0b01000000,
-    MOD_RGUI    = 0b10000000,
+    MOD_LCTRL = 0b00000001,
+    MOD_LSHIFT = 0b00000010,
+    MOD_LALT = 0b00000100,
+    MOD_LGUI = 0b00001000,
+    MOD_RCTRL = 0b00010000,
+    MOD_RSHIFT = 0b00100000,
+    MOD_RALT = 0b01000000,
+    MOD_RGUI = 0b10000000,
 }
 
-// impl From<u8> for Modifers {
-//     fn from(value: u8) -> Self {
-//         match value {
-//             0b00000001 => Modifers::MOD_LCTRL,
-//             0b00000010 => Modifers::MOD_LSHIFT,
-//             0b00000100 => Modifers::MOD_LALT,
-//             0b00001000 => Modifers::MOD_LGUI,
-//             0b00010000 => Modifers::MOD_RCTRL,
-//             0b00100000 => Modifers::MOD_RSHIFT,
-//             0b01000000 => Modifers::MOD_RALT,
-//             0b10000000 => Modifers::MOD_RGUI,
-//         }
-//     }
-// }
-
-impl Into<u8> for Modifers {
-    fn into(self) -> u8 {
-        match self {
-            Self::MOD_LCTRL   => 0b00000001,
-            Self::MOD_LSHIFT  => 0b00000010,
-            Self::MOD_LALT    => 0b00000100,
-            Self::MOD_LGUI    => 0b00001000,
-            Self::MOD_RCTRL   => 0b00010000,
-            Self::MOD_RSHIFT  => 0b00100000,
-            Self::MOD_RALT    => 0b01000000,
-            Self::MOD_RGUI    => 0b10000000,
+impl From<Modifers> for u8 {
+    fn from(value: Modifers) -> Self {
+        match value {
+            Modifers::MOD_LCTRL => 0b00000001,
+            Modifers::MOD_LSHIFT => 0b00000010,
+            Modifers::MOD_LALT => 0b00000100,
+            Modifers::MOD_LGUI => 0b00001000,
+            Modifers::MOD_RCTRL => 0b00010000,
+            Modifers::MOD_RSHIFT => 0b00100000,
+            Modifers::MOD_RALT => 0b01000000,
+            Modifers::MOD_RGUI => 0b10000000,
         }
     }
 }
