@@ -104,6 +104,8 @@ pub enum Keycodes {
     KC_LAYER(usize),
     KC_MO(usize),
     KC_NO_KEY,
+
+    KEYS_2(&'static Keycodes, &'static Keycodes),
 }
 
 impl Keycodes {

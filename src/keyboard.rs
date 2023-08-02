@@ -50,6 +50,22 @@ impl<const COLS: usize, const ROWS: usize, const LAYERS: usize> Keyboard<COLS, R
                         self.layer = x;
                     }
                 }
+                Keycodes::KEYS_2(key_1, key_2) => {
+                    let key = Key {
+                        col: None,
+                        row: None,
+                        keycode: *key_1,
+                        encoder: false,
+                    };
+                    self.key_press(key);
+                    let key = Key {
+                        col: None,
+                        row: None,
+                        keycode: *key_2,
+                        encoder: false,
+                    };
+                    self.key_press(key);
+                }
                 Keycodes::KC_LAYER(x) => self.layer = x,
                 Keycodes::KC_LEFT_CTRL => {
                     self.report.modifier |= Modifers::MOD_LCTRL as u8;

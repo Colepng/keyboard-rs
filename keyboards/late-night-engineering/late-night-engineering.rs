@@ -69,8 +69,8 @@ fn main() -> ! {
     let encoder2 = Encoder::new(
         pins.gpio7.into(),
         pins.gpio6.into(),
+        [KEYS_2(&KC_LEFT_SHIFT, &KC_EQUAL), KC_NO],
         [KC_MINUS, KC_NO],
-        [KC_VOLUP, KC_NO],
     );
 
     let encoder3 = Encoder::new(
