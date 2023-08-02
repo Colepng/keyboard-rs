@@ -62,22 +62,31 @@ fn main() -> ! {
     let encoder1 = Encoder::new(
         pins.gpio9.into(),
         pins.gpio8.into(),
-        [KC_VOLDOWN, KC_NO],
-        [KC_VOLUP, KC_NO],
+        #[rustfmt::skip]
+        [
+            [KC_NO, KC_NO], 
+            [KC_NO, KC_NO]
+        ],
     );
 
     let encoder2 = Encoder::new(
         pins.gpio7.into(),
         pins.gpio6.into(),
-        [KEYS_2(&KC_LEFT_SHIFT, &KC_EQUAL), KC_NO],
-        [KC_MINUS, KC_NO],
+        #[rustfmt::skip]
+        [
+            [KC_MINUS, KEYS_2(&KC_LEFT_SHIFT, &KC_EQUAL)],
+            [KC_NO, KC_NO],
+        ],
     );
 
     let encoder3 = Encoder::new(
         pins.gpio1.into(),
         pins.gpio0.into(),
-        [KC_VOLUP, KC_NO],
-        [KC_VOLDOWN, KC_NO],
+        #[rustfmt::skip]
+        [
+            [KC_VOLDOWN, KC_VOLUP], 
+            [KC_NO, KC_NO]
+        ],
     );
 
     matrix_scaning(

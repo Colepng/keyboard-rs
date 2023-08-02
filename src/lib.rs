@@ -141,6 +141,7 @@ pub fn matrix_scaning<
     mut rows: [DynPin; ROWS],
     keys: [[[Keycodes; COLS]; ROWS]; LAYERS],
     #[cfg(feature = "encoders")] mut encoders: [Encoder<LAYERS>; NUM_OF_ENCODERS],
+
     mut watchdog: hal::Watchdog,
     mut delay: Delay,
 ) -> ! {

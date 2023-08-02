@@ -134,7 +134,7 @@ impl<const COLS: usize, const ROWS: usize, const LAYERS: usize> Keyboard<COLS, R
         encoder.update();
         match encoder.dir {
             Dir::Cw => {
-                let keycode = encoder.actions_clock_wise[self.layer];
+                let keycode = encoder.actions[self.layer][1];
                 let key = Key {
                     col: None,
                     row: None,
@@ -146,7 +146,7 @@ impl<const COLS: usize, const ROWS: usize, const LAYERS: usize> Keyboard<COLS, R
                 push_input_report(self.report).ok().unwrap_or(0);
             }
             Dir::Cww => {
-                let keycode = encoder.actions_counter_clock_wise[self.layer];
+                let keycode = encoder.actions[self.layer][0];
                 let key = Key {
                     col: None,
                     row: None,

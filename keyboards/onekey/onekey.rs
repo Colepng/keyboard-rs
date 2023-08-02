@@ -32,8 +32,11 @@ fn main() -> ! {
     let encoder = Encoder::new(
         pins.gpio22.into(),
         pins.gpio21.into(),
-        [KC_VOLUP, KC_B],
-        [KC_VOLDOWN, KC_A],
+        #[rustfmt::skip]
+        [
+            [KC_VOLUP, KC_B],
+            [KC_VOLDOWN, KC_A],
+        ]
     );
 
     matrix_scaning(col, row, KEYS, [encoder], watchdog, delay);
