@@ -15,6 +15,7 @@ path = "src/lib.rs"
 [[bin]]
 name = "onekey"
 path = "keyboards/onekey/onekey.rs"
+required-features = ["encoders"]
 
 [[bin]]
 name = "threebytwo"
@@ -23,6 +24,7 @@ path = "keyboards/3by2/3by2.rs"
 [[bin]]
 name = "late-night-engineering"
 path = "keyboards/late-night-engineering/late-night-engineering.rs"
+required-features = ["encoders"]
 
 [dependencies]
 cortex-m = "0.7.7"
