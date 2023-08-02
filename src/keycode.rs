@@ -108,13 +108,10 @@ pub enum Keycodes {
 
 impl Keycodes {
     pub fn is_consumer(&self) -> bool {
-        match self {
-            Self::KC_MPREV => true,
-            Self::KC_MNEXT => true,
-            Self::KC_MSTOP => true,
-            Self::KC_MPLAY_PAUSE => true,
-            _ => false,
-        }
+        matches!(
+            self,
+            Self::KC_MPREV | Self::KC_MNEXT | Self::KC_MSTOP | Self::KC_MPLAY_PAUSE
+        )
     }
 }
 
