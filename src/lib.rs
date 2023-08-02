@@ -3,6 +3,7 @@
 
 #[cfg(feature = "encoders")]
 pub mod hardware;
+pub mod key;
 mod keyboard;
 pub mod keycode;
 mod usb;
@@ -30,6 +31,7 @@ use usbd_hid::descriptor::AsInputReport;
 use usbd_hid::descriptor::SerializedDescriptor;
 use usbd_hid::hid_class;
 
+use key::Key;
 use usb::Report;
 
 /// The USB Device Driver (shared with the interrupt).
@@ -166,7 +168,13 @@ pub fn matrix_scaning<
             for (row, pin) in rows.iter_mut().enumerate() {
                 if pin.is_high().unwrap() && keyboard.index <= 10 {
                     // on press
-                    keyboard.key_press(keys[keyboard.layer][row][col], col, row);
+                    let key = Key {
+                        col: Some(col),
+                        row: Some(row),
+                        keycode: keys[keyboard.layer][row][col],
+                        encoder: false,
+                    };
+                    keyboard.key_press(key);
                 } else {
                     // on release
                     keyboard.key_release(keys, col, row);

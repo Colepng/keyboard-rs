@@ -3,6 +3,7 @@ use cortex_m::delay::Delay;
 
 #[cfg(feature = "encoders")]
 use crate::hardware::{Dir, Encoder};
+use crate::key::Key;
 use crate::keycode::{Keycodes, Modifers};
 #[cfg(feature = "encoders")]
 use crate::push_input_report;
@@ -34,16 +35,22 @@ impl<const COLS: usize, const ROWS: usize, const LAYERS: usize> Keyboard<COLS, R
     }
 
     // TODO push on every key press
-    pub fn key_press(&mut self, keycode: Keycodes, col: usize, row: usize) {
-        self.current_state[row][col] = true;
+    pub fn key_press(&mut self, key: Key) {
+        if !key.encoder {
+            self.current_state[key.row.unwrap_or(0)][key.col.unwrap_or(0)] = true;
+        }
 
-        if !self.locked_keys[row][col].0 {
-            match keycode {
+        if key.encoder || !self.locked_keys[key.row.unwrap_or(0)][key.col.unwrap_or(0)].0 {
+            match key.keycode {
                 Keycodes::KC_MO(x) => {
-                    self.locked_keys[row][col] = (true, self.layer);
-                    self.last_layer = self.layer;
-                    self.layer = x;
+                    if !key.encoder {
+                        self.locked_keys[key.row.unwrap_or(0)][key.col.unwrap_or(0)] =
+                            (true, self.layer);
+                        self.last_layer = self.layer;
+                        self.layer = x;
+                    }
                 }
+                Keycodes::KC_LAYER(x) => self.layer = x,
                 Keycodes::KC_LEFT_CTRL => {
                     self.report.modifier |= Modifers::MOD_LCTRL as u8;
                 }
@@ -68,13 +75,13 @@ impl<const COLS: usize, const ROWS: usize, const LAYERS: usize> Keyboard<COLS, R
                 Keycodes::KC_RIGHT_GUI => {
                     self.report.modifier |= Modifers::MOD_RGUI as u8;
                 }
-                _ if keycode.is_consumer() => {
-                    if let Ok(keycode) = keycode.try_into() {
+                _ if key.keycode.is_consumer() => {
+                    if let Ok(keycode) = key.keycode.try_into() {
                         self.report.consumer_control = keycode;
                     }
                 }
                 _ => {
-                    if let Ok(keycode) = keycode.try_into() {
+                    if let Ok(keycode) = key.keycode.try_into() {
                         self.add_key(keycode);
                     }
                 }
@@ -87,7 +94,12 @@ impl<const COLS: usize, const ROWS: usize, const LAYERS: usize> Keyboard<COLS, R
         self.index += 1;
     }
 
-    pub fn key_release(&mut self, keys: [[[Keycodes; COLS]; ROWS]; LAYERS], col: usize, row: usize) {
+    pub fn key_release(
+        &mut self,
+        keys: [[[Keycodes; COLS]; ROWS]; LAYERS],
+        col: usize,
+        row: usize,
+    ) {
         if self.old_current_state[row][col] {
             match keys[self.locked_keys[row][col].1][row][col] {
                 Keycodes::KC_LAYER(x) => self.layer = x,
@@ -107,29 +119,25 @@ impl<const COLS: usize, const ROWS: usize, const LAYERS: usize> Keyboard<COLS, R
         match encoder.dir {
             Dir::Cw => {
                 let keycode = encoder.actions_clock_wise[self.layer];
-                if let Ok(keycode) = keycode.try_into() {
-                    // self.report.keycodes[self.index] = keycode;
-                    self.add_key(keycode);
-                } else {
-                    match keycode {
-                        Keycodes::KC_LAYER(x) => self.layer = x as usize,
-                        _ => {}
-                    }
-                }
+                let key = Key {
+                    col: None,
+                    row: None,
+                    keycode,
+                    encoder: true,
+                };
+                self.key_press(key);
                 delay.delay_ms(30);
                 push_input_report(self.report).ok().unwrap_or(0);
             }
             Dir::Cww => {
                 let keycode = encoder.actions_counter_clock_wise[self.layer];
-                if let Ok(keycode) = keycode.try_into() {
-                    // self.report.keycodes[self.index] = keycode;
-                    self.add_key(keycode);
-                } else {
-                    match keycode {
-                        Keycodes::KC_LAYER(x) => self.layer = x as usize,
-                        _ => {}
-                    }
-                }
+                let key = Key {
+                    col: None,
+                    row: None,
+                    keycode,
+                    encoder: true,
+                };
+                self.key_press(key);
                 delay.delay_ms(30);
                 push_input_report(self.report).ok().unwrap_or(0);
             }
