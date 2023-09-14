@@ -1,9 +1,10 @@
 #![no_std]
 #![no_main]
+#![feature(stmt_expr_attributes)] // allows the #[rustfmt::skip]
 
-use keyboardrs::hardware::Encoder;
-use keyboardrs::keycode::{Keycodes, Keycodes::*};
-use keyboardrs::{init, matrix_scaning};
+use keyboard_rs::hardware::Encoder;
+use keyboard_rs::keycode::{Keycodes, Keycodes::*};
+use keyboard_rs::{init, matrix_scaning};
 
 use panic_halt as _;
 use rp_pico::entry;
@@ -64,7 +65,7 @@ fn main() -> ! {
         pins.gpio8.into(),
         #[rustfmt::skip]
         [
-            [KC_NO, KC_NO], 
+            [KC_NO, KC_NO],
             [KC_NO, KC_NO]
         ],
     );
@@ -84,7 +85,7 @@ fn main() -> ! {
         pins.gpio0.into(),
         #[rustfmt::skip]
         [
-            [KC_VOLDOWN, KC_VOLUP], 
+            [KC_VOLDOWN, KC_VOLUP],
             [KC_NO, KC_NO]
         ],
     );

@@ -1,8 +1,8 @@
 #![no_std]
 #![no_main]
 
-use keyboardrs::keycode::{Keycodes, Keycodes::*};
-use keyboardrs::{init, matrix_scaning};
+use keyboard_rs::keycode::{Keycodes, Keycodes::*};
+use keyboard_rs::{init, matrix_scaning};
 
 use panic_halt as _;
 use rp_pico::entry;

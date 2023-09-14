@@ -1,9 +1,9 @@
 #![no_std]
 #![no_main]
 
-use keyboardrs::hardware::Encoder;
-use keyboardrs::keycode::{Keycodes, Keycodes::*};
-use keyboardrs::{init, matrix_scaning};
+use keyboard_rs::hardware::Encoder;
+use keyboard_rs::keycode::{Keycodes, Keycodes::*};
+use keyboard_rs::{init, matrix_scaning};
 
 use panic_halt as _;
 use rp_pico::entry;
@@ -36,7 +36,7 @@ fn main() -> ! {
         [
             [KC_VOLUP, KC_B],
             [KC_VOLDOWN, KC_A],
-        ]
+        ],
     );
 
     matrix_scaning(col, row, KEYS, [encoder], watchdog, delay);
