@@ -1,6 +1,7 @@
 #![no_std]
 #![no_main]
 #![feature(stmt_expr_attributes)] // allows the #[rustfmt::skip]
+#![feature(generic_const_exprs)]
 
 use keyboard_rs::hardware::Encoder;
 use keyboard_rs::keycode::{Keycodes, Keycodes::*};
@@ -34,7 +35,7 @@ fn main() -> ! {
         ],
     ];
 
-    let (pins, watchdog, delay) = init();
+    let (pins, board) = init();
 
     let col: [DynPin; NUMOFCOL] = [
         pins.gpio26.into(),
@@ -90,12 +91,5 @@ fn main() -> ! {
         ],
     );
 
-    matrix_scaning(
-        col,
-        row,
-        KEYS,
-        [encoder1, encoder2, encoder3],
-        watchdog,
-        delay,
-    );
+    matrix_scaning(board, col, row, KEYS, [encoder1, encoder2, encoder3]);
 }

@@ -1,36 +1,35 @@
 #[cfg(feature = "encoders")]
 use cortex_m::delay::Delay;
+use usb_device::class_prelude::UsbBus;
+use usbd_human_interface_device::device::keyboard::NKROBootKeyboardConfig;
+use usbd_human_interface_device::page;
+use usbd_human_interface_device::usb_class::{UsbHidClass, UsbHidClassBuilder};
 
 #[cfg(feature = "encoders")]
 use crate::hardware::{Dir, Encoder};
 use crate::key::Key;
 use crate::keycode::{Keycodes, Modifers};
-#[cfg(feature = "encoders")]
-use crate::push_input_report;
-use crate::usb::Report;
 
 pub struct Keyboard<const COLS: usize, const ROWS: usize, const LAYERS: usize> {
+    state: [[Option<Keycodes>; COLS]; ROWS],
     current_state: [[bool; COLS]; ROWS],
     old_current_state: [[bool; COLS]; ROWS],
     locked_keys: [[(bool, usize); COLS]; ROWS],
     pub layer: usize,
     last_layer: usize,
-    pub index: usize,
     // pub report: KeyboardReport,
-    pub report: Report,
+    // pub report: Report,
 }
 
 impl<const COLS: usize, const ROWS: usize, const LAYERS: usize> Keyboard<COLS, ROWS, LAYERS> {
     pub fn new() -> Self {
         Keyboard {
+            state: [[None; COLS]; ROWS],
             current_state: [[false; COLS]; ROWS],
             old_current_state: [[false; COLS]; ROWS],
             locked_keys: [[(false, 0); COLS]; ROWS],
             layer: 0,
             last_layer: 0,
-            index: 0,
-            // report: KeyboardReport { modifier: 0x00, reserved: 0x00, leds: 0x00, keycodes: [0x00; 6] },
-            report: Report::default(),
         }
     }
 
@@ -67,47 +66,48 @@ impl<const COLS: usize, const ROWS: usize, const LAYERS: usize> Keyboard<COLS, R
                     self.key_press(key);
                 }
                 Keycodes::KC_LAYER(x) => self.layer = x,
-                Keycodes::KC_LEFT_CTRL => {
-                    self.report.modifier |= Modifers::MOD_LCTRL as u8;
-                }
-                Keycodes::KC_LEFT_SHIFT => {
-                    self.report.modifier |= Modifers::MOD_LSHIFT as u8;
-                }
-                Keycodes::KC_LEFT_ALT => {
-                    self.report.modifier |= Modifers::MOD_LALT as u8;
-                }
-                Keycodes::KC_LEFT_GUI => {
-                    self.report.modifier |= Modifers::MOD_LGUI as u8;
-                }
-                Keycodes::KC_RIGHT_CTRL => {
-                    self.report.modifier |= Modifers::MOD_LCTRL as u8;
-                }
-                Keycodes::KC_RIGHT_SHIFT => {
-                    self.report.modifier |= Modifers::MOD_RSHIFT as u8;
-                }
-                Keycodes::KC_RIGHT_ALT => {
-                    self.report.modifier |= Modifers::MOD_RALT as u8;
-                }
-                Keycodes::KC_RIGHT_GUI => {
-                    self.report.modifier |= Modifers::MOD_RGUI as u8;
-                }
+                // Keycodes::KC_LEFT_CTRL => {
+                //     self.report.modifier |= Modifers::MOD_LCTRL as u8;
+                // }
+                // Keycodes::KC_LEFT_SHIFT => {
+                //     self.report.modifier |= Modifers::MOD_LSHIFT as u8;
+                // }
+                // Keycodes::KC_LEFT_ALT => {
+                //     self.report.modifier |= Modifers::MOD_LALT as u8;
+                // }
+                // Keycodes::KC_LEFT_GUI => {
+                //     self.report.modifier |= Modifers::MOD_LGUI as u8;
+                // }
+                // Keycodes::KC_RIGHT_CTRL => {
+                //     self.report.modifier |= Modifers::MOD_LCTRL as u8;
+                // }
+                // Keycodes::KC_RIGHT_SHIFT => {
+                //     self.report.modifier |= Modifers::MOD_RSHIFT as u8;
+                // }
+                // Keycodes::KC_RIGHT_ALT => {
+                //     self.report.modifier |= Modifers::MOD_RALT as u8;
+                // }
+                // Keycodes::KC_RIGHT_GUI => {
+                //     self.report.modifier |= Modifers::MOD_RGUI as u8;
+                // }
                 _ if key.keycode.is_consumer() => {
-                    if let Ok(keycode) = key.keycode.try_into() {
-                        self.report.consumer_control = keycode;
-                    }
+                    // if let Ok(keycode) = key.keycode.try_into() {
+                        // self.report.consumer_control = keycode;
+                    // }
                 }
                 _ => {
-                    if let Ok(keycode) = key.keycode.try_into() {
-                        self.add_key(keycode);
-                    }
+                    // if let Ok(keycode) = key.keycode.try_into() {
+                        self.add_key(key);
+                    // }
                 }
             }
         }
     }
 
-    fn add_key(&mut self, keycode: u8) {
-        self.report.keycodes[self.index] = keycode;
-        self.index += 1;
+    fn add_key(&mut self, key: Key) {
+        self.state[key.row.unwrap()][key.col.unwrap()] = Some(key.keycode);
+        // self.report.keycodes[self.index] = keycode;
+        // self.index += 1;
     }
 
     pub fn key_release(
@@ -116,17 +116,18 @@ impl<const COLS: usize, const ROWS: usize, const LAYERS: usize> Keyboard<COLS, R
         col: usize,
         row: usize,
     ) {
-        if self.old_current_state[row][col] {
-            match keys[self.locked_keys[row][col].1][row][col] {
-                Keycodes::KC_LAYER(x) => self.layer = x,
-                Keycodes::KC_MO(_) => {
-                    self.layer = self.last_layer;
-                    self.locked_keys[row][col] = (false, self.layer);
-                }
-                _ => {}
-            }
-        }
-        self.current_state[row][col] = false;
+        self.state[row][col] = None;
+        // if self.old_current_state[row][col] {
+        //     match keys[self.locked_keys[row][col].1][row][col] {
+        //         Keycodes::KC_LAYER(x) => self.layer = x,
+        //         Keycodes::KC_MO(_) => {
+        //             self.layer = self.last_layer;
+        //             self.locked_keys[row][col] = (false, self.layer);
+        //         }
+        //         _ => {}
+        //     }
+        // }
+        // self.current_state[row][col] = false;
     }
 
     #[cfg(feature = "encoders")]
@@ -142,8 +143,8 @@ impl<const COLS: usize, const ROWS: usize, const LAYERS: usize> Keyboard<COLS, R
                     encoder: true,
                 };
                 self.key_press(key);
-                delay.delay_ms(30);
-                push_input_report(self.report).ok().unwrap_or(0);
+                // delay.delay_ms(30);
+                // push_input_report(self.report).ok().unwrap_or(0);
             }
             Dir::Cww => {
                 let keycode = encoder.actions[self.layer][0];
@@ -154,20 +155,22 @@ impl<const COLS: usize, const ROWS: usize, const LAYERS: usize> Keyboard<COLS, R
                     encoder: true,
                 };
                 self.key_press(key);
-                delay.delay_ms(30);
-                push_input_report(self.report).ok().unwrap_or(0);
+                // delay.delay_ms(30);
+                // push_input_report(self.report).ok().unwrap_or(0);
             }
             _ => {}
         }
+    }
+
+    pub fn state(&self) -> &[Option<Keycodes>] {
+        self.state.flatten()
     }
 
     pub fn update_state(&mut self) {
         self.old_current_state = self.current_state;
     }
 
-    pub fn reset(&mut self) {
-        self.index = 0;
-        // self.report = KeyboardReport { modifier: 0x00, reserved: 0x00, leds: 0x00, keycodes: [0x00; 6] };
-        self.report = Report::default();
-    }
+    // pub fn reset(&mut self) {
+    //     self.index = 0;
+    // }
 }
