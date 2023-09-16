@@ -1,7 +1,6 @@
 #![no_std]
 #![no_main]
 #![feature(stmt_expr_attributes)] // allows the #[rustfmt::skip]
-#![feature(generic_const_exprs)]
 
 use keyboard_rs::hardware::Encoder;
 use keyboard_rs::keycode::{Keycodes, Keycodes::*};

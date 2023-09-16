@@ -8,7 +8,7 @@ use usbd_human_interface_device::usb_class::{UsbHidClass, UsbHidClassBuilder};
 #[cfg(feature = "encoders")]
 use crate::hardware::{Dir, Encoder};
 use crate::key::Key;
-use crate::keycode::{Keycodes, Modifers};
+use crate::keycode::Keycodes;
 
 pub struct Keyboard<const COLS: usize, const ROWS: usize, const LAYERS: usize> {
     state: [[Option<Keycodes>; COLS]; ROWS],
@@ -17,8 +17,6 @@ pub struct Keyboard<const COLS: usize, const ROWS: usize, const LAYERS: usize> {
     locked_keys: [[(bool, usize); COLS]; ROWS],
     pub layer: usize,
     last_layer: usize,
-    // pub report: KeyboardReport,
-    // pub report: Report,
 }
 
 impl<const COLS: usize, const ROWS: usize, const LAYERS: usize> Keyboard<COLS, ROWS, LAYERS> {
@@ -66,38 +64,14 @@ impl<const COLS: usize, const ROWS: usize, const LAYERS: usize> Keyboard<COLS, R
                     self.key_press(key);
                 }
                 Keycodes::KC_LAYER(x) => self.layer = x,
-                // Keycodes::KC_LEFT_CTRL => {
-                //     self.report.modifier |= Modifers::MOD_LCTRL as u8;
-                // }
-                // Keycodes::KC_LEFT_SHIFT => {
-                //     self.report.modifier |= Modifers::MOD_LSHIFT as u8;
-                // }
-                // Keycodes::KC_LEFT_ALT => {
-                //     self.report.modifier |= Modifers::MOD_LALT as u8;
-                // }
-                // Keycodes::KC_LEFT_GUI => {
-                //     self.report.modifier |= Modifers::MOD_LGUI as u8;
-                // }
-                // Keycodes::KC_RIGHT_CTRL => {
-                //     self.report.modifier |= Modifers::MOD_LCTRL as u8;
-                // }
-                // Keycodes::KC_RIGHT_SHIFT => {
-                //     self.report.modifier |= Modifers::MOD_RSHIFT as u8;
-                // }
-                // Keycodes::KC_RIGHT_ALT => {
-                //     self.report.modifier |= Modifers::MOD_RALT as u8;
-                // }
-                // Keycodes::KC_RIGHT_GUI => {
-                //     self.report.modifier |= Modifers::MOD_RGUI as u8;
-                // }
                 _ if key.keycode.is_consumer() => {
                     // if let Ok(keycode) = key.keycode.try_into() {
-                        // self.report.consumer_control = keycode;
+                    // self.report.consumer_control = keycode;
                     // }
                 }
                 _ => {
                     // if let Ok(keycode) = key.keycode.try_into() {
-                        self.add_key(key);
+                    self.add_key(key);
                     // }
                 }
             }

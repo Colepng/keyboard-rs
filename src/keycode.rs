@@ -337,32 +337,3 @@ impl TryInto<u8> for &Keycodes {
         }
     }
 }
-
-#[derive(Copy, Clone)]
-#[allow(non_camel_case_types, unused)]
-#[repr(u8)]
-pub enum Modifers {
-    MOD_LCTRL = 0b00000001,
-    MOD_LSHIFT = 0b00000010,
-    MOD_LALT = 0b00000100,
-    MOD_LGUI = 0b00001000,
-    MOD_RCTRL = 0b00010000,
-    MOD_RSHIFT = 0b00100000,
-    MOD_RALT = 0b01000000,
-    MOD_RGUI = 0b10000000,
-}
-
-impl From<Modifers> for u8 {
-    fn from(value: Modifers) -> Self {
-        match value {
-            Modifers::MOD_LCTRL => 0b00000001,
-            Modifers::MOD_LSHIFT => 0b00000010,
-            Modifers::MOD_LALT => 0b00000100,
-            Modifers::MOD_LGUI => 0b00001000,
-            Modifers::MOD_RCTRL => 0b00010000,
-            Modifers::MOD_RSHIFT => 0b00100000,
-            Modifers::MOD_RALT => 0b01000000,
-            Modifers::MOD_RGUI => 0b10000000,
-        }
-    }
-}

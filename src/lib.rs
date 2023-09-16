@@ -1,6 +1,5 @@
 #![no_std]
 #![no_main]
-#![feature(generic_const_exprs)]
 #![feature(slice_flatten)]
 
 #[cfg(feature = "encoders")]
@@ -35,7 +34,7 @@ use key::Key;
 use usbd_human_interface_device::device::keyboard::NKROBootKeyboardConfig;
 use usbd_human_interface_device::device::DeviceHList;
 use usbd_human_interface_device::usb_class::UsbHidClassBuilder;
-use usbd_human_interface_device::{UsbHidError, page};
+use usbd_human_interface_device::{page, UsbHidError};
 
 /// External high-speed crystal on the Raspberry Pi Pico board is 12 MHz. Adjust
 /// if your board has a different frequency
@@ -178,15 +177,13 @@ pub fn matrix_scaning<
             let state = keyboard.state();
 
             let keys = state.into_iter().map(|keycode| {
-                page::Keyboard::from(
-                    if let Some(keycode) = keycode {
-                        keycode.try_into().unwrap_or(0)
-                    } else {
-                        0
-                    }
-                    )
+                page::Keyboard::from(if let Some(keycode) = keycode {
+                    keycode.try_into().unwrap_or(0)
+                } else {
+                    0
+                })
             });
-            
+
             match usb_hid_class.device().write_report(keys) {
                 Err(UsbHidError::WouldBlock) => {}
                 Err(UsbHidError::Duplicate) => {}
@@ -229,19 +226,3 @@ pub fn matrix_scaning<
         // keyboard.reset();
     }
 }
-
-// fn push_input_report<T: AsInputReport>(report: T) -> Result<usize, usb_device::UsbError> {
-//     critical_section::with(|_| unsafe {
-//         // Now interrupts are disabled, grab the global variable and, if
-//         // available, send it a HID report
-//         USB_HID.as_mut().map(|hid| hid.push_input(&report))
-//     })
-//     .unwrap()
-// }
-
-// #[interrupt]
-// unsafe fn USBCTRL_IRQ() {
-//     let usb_hid = USB_HID.as_mut().unwrap();
-//     let usb_device = USB_DEVICE.as_mut().unwrap();
-//     usb_device.poll(&mut [usb_hid]);
-// }
