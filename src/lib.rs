@@ -18,7 +18,7 @@ use keycode::Keycode;
 use panic_halt as _;
 use rp2040_hal as hal;
 use rp2040_hal::gpio::{DynPin, Pins};
-use usb_device:: class_prelude::UsbBusAllocator;
+use usb_device::class_prelude::UsbBusAllocator;
 
 use fugit::ExtU32;
 

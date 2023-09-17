@@ -3,7 +3,7 @@ Keyboard firmware library for rp2040 chips written in rust
 
 # REFACTOR Todo
 - [ ] fix encoders
-- [ ] fix all non keyboard page keycodes
+- [x] fix all non keyboard page keycodes
 - [ ] fix layer swapping
 
 # Todo
@@ -28,4 +28,4 @@ Keyboard firmware library for rp2040 chips written in rust
 
 # Example warnings
 both onekey and late-night-engineering need the encoders feature to be enabled when building.
-Normally if you would enable it when you are declaring this library as a dependency
+Normally you would enable it when you are declaring this library as a dependency

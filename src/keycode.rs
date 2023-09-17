@@ -112,8 +112,27 @@ impl Keycode {
     pub fn is_consumer(&self) -> bool {
         matches!(
             self,
-            Self::KC_MPREV | Self::KC_MNEXT | Self::KC_MSTOP | Self::KC_MPLAY_PAUSE
+            Self::KC_MNEXT
+                | Self::KC_MPREV
+                | Self::KC_MSTOP
+                | Self::KC_MPLAY_PAUSE
+                | Self::KC_MUTE
+                | Self::KC_VOLUP
+                | Self::KC_VOLDOWN
         )
+    }
+
+    pub fn into_consumer(&self) -> Option<u16> {
+        match self {
+            Self::KC_MNEXT => Some(0xB5),
+            Self::KC_MPREV => Some(0xB6),
+            Self::KC_MSTOP => Some(0xB7),
+            Self::KC_MPLAY_PAUSE => Some(0xCD),
+            Self::KC_MUTE => Some(0xE2),
+            Self::KC_VOLUP => Some(0xE9),
+            Self::KC_VOLDOWN => Some(0xEA),
+            _ => None,
+        }
     }
 }
 

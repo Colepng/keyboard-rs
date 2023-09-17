@@ -76,7 +76,12 @@ impl<'a, const NUM_OF_COLS: usize, const NUM_OF_ROWS: usize>
     // update the keyboard
     pub fn periodic(&mut self) {
         if self.matrix.scan(&self.state) {
-            self.usb.write_report(self.matrix.state.flatten())
+            let flatten_state = self.matrix.state.flatten();
+            self.usb.write_keyboard_report(flatten_state);
+
+            if self.usb.should_write_consumer_report() {
+                self.usb.write_consumer_report(flatten_state)
+            }
         }
 
         self.usb.periodic();
