@@ -47,7 +47,7 @@ impl<'a, const NUM_OF_COLS: usize, const NUM_OF_ROWS: usize> Matrix<'a, NUM_OF_C
 
     // scans the matrix
     // returns if the matrix has changed
-    pub(super) fn scan(&mut self, state: &State) -> bool {
+    pub(super) fn scan(&mut self, state: &mut State<NUM_OF_COLS, NUM_OF_ROWS>) -> bool {
         if !self.should_scan() {
             let mut has_changed = false;
 
@@ -66,14 +66,24 @@ impl<'a, const NUM_OF_COLS: usize, const NUM_OF_ROWS: usize> Matrix<'a, NUM_OF_C
                                     has_changed = true;
                                 }
 
-                                self.state[input_index][output_index] =
-                                    state.get_key(input_index, output_index);
+                                let key = state.get_key(input_index, output_index);
+                                if self.state[input_index][output_index] != key {
+                                    state.on_press(key, input_index, output_index);
+                                    self.state[input_index][output_index] = key;
+                                }
                             } else {
                                 if !has_changed {
                                     has_changed = true;
                                 }
 
-                                self.state[input_index][output_index] = Keycode::KC_NO;
+                                if self.state[input_index][output_index] != Keycode::KC_NO {
+                                    state.on_release(
+                                        self.state[input_index][output_index],
+                                        input_index,
+                                        output_index,
+                                    );
+                                    self.state[input_index][output_index] = Keycode::KC_NO;
+                                }
                             }
                         });
 

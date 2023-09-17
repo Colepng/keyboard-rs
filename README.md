@@ -4,7 +4,8 @@ Keyboard firmware library for rp2040 chips written in rust
 # REFACTOR Todo
 - [ ] fix encoders
 - [x] fix all non keyboard page keycodes
-- [ ] fix layer swapping
+- [x] fix layer swapping
+- [ ] fix multi action keys
 
 # Todo
 - [ ] abstraction for keycodes - in progress

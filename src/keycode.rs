@@ -1,5 +1,5 @@
 use self::Keycode::*;
-#[derive(Copy, Clone)]
+#[derive(Copy, Clone, PartialEq)]
 #[allow(non_camel_case_types, unused)]
 #[repr(u8)]
 pub enum Keycode {
