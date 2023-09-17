@@ -1,12 +1,12 @@
 use embedded_hal::digital::v2::InputPin;
 use rp2040_hal::gpio::DynPin;
 
-use crate::keycode::Keycodes;
+use crate::keycode::Keycode;
 
 pub struct Encoder<const LAYERS: usize> {
     pub channel_a: DynPin,
     pub channel_b: DynPin,
-    pub actions: [[Keycodes; 2]; LAYERS],
+    pub actions: [[Keycode; 2]; LAYERS],
     state: u8,
     pulses: i8,
     pub dir: Dir,
@@ -21,7 +21,7 @@ pub enum Dir {
 impl<const LAYERS: usize> Encoder<LAYERS> {
     pub const LOOKUP_TABLE: [i8; 16] = [0, -1, 1, 0, 1, 0, 0, -1, -1, 0, 0, 1, 0, 1, -1, 0];
 
-    pub fn new(channel_a: DynPin, channel_b: DynPin, actions: [[Keycodes; 2]; LAYERS]) -> Self {
+    pub fn new(channel_a: DynPin, channel_b: DynPin, actions: [[Keycode; 2]; LAYERS]) -> Self {
         Encoder {
             channel_a,
             channel_b,

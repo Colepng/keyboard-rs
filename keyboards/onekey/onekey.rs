@@ -2,7 +2,7 @@
 #![no_main]
 
 use keyboard_rs::hardware::Encoder;
-use keyboard_rs::keycode::{Keycodes, Keycodes::*};
+use keyboard_rs::keycode::{Keycode, Keycode::*};
 use keyboard_rs::{init, matrix_scaning};
 
 use panic_halt as _;
@@ -16,7 +16,7 @@ fn main() -> ! {
     const NUMOFLAYES: usize = 2;
 
     #[rustfmt::skip]
-    const KEYS: [[[Keycodes; NUMOFCOL]; NUMOFROW]; NUMOFLAYES] = [
+    const KEYS: [[[Keycode; NUMOFCOL]; NUMOFROW]; NUMOFLAYES] = [
         [
             [KC_LAYER(1)]
         ], [

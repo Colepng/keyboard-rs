@@ -1,8 +1,8 @@
-use self::Keycodes::*;
+use self::Keycode::*;
 #[derive(Copy, Clone)]
 #[allow(non_camel_case_types, unused)]
 #[repr(u8)]
-pub enum Keycodes {
+pub enum Keycode {
     KC_NO = 0x00,
 
     KC_A = 0x04,
@@ -105,10 +105,10 @@ pub enum Keycodes {
     KC_MO(usize),
     KC_NO_KEY,
 
-    KEYS_2(&'static Keycodes, &'static Keycodes),
+    KEYS_2(&'static Keycode, &'static Keycode),
 }
 
-impl Keycodes {
+impl Keycode {
     pub fn is_consumer(&self) -> bool {
         matches!(
             self,
@@ -124,7 +124,7 @@ impl Keycodes {
 //     }
 // }
 
-impl TryInto<u8> for Keycodes {
+impl TryInto<u8> for Keycode {
     type Error = &'static str;
     fn try_into(self) -> Result<u8, Self::Error> {
         match self {
@@ -231,7 +231,7 @@ impl TryInto<u8> for Keycodes {
     }
 }
 
-impl TryInto<u8> for &Keycodes {
+impl TryInto<u8> for &Keycode {
     type Error = &'static str;
     fn try_into(self) -> Result<u8, Self::Error> {
         match self {

@@ -1,6 +1,11 @@
 # Keyboard
 Keyboard firmware library for rp2040 chips written in rust 
 
+# REFACTOR Todo
+- [ ] fix encoders
+- [ ] fix all non keyboard page keycodes
+- [ ] fix layer swapping
+
 # Todo
 - [ ] abstraction for keycodes - in progress
 - [ ] layers
@@ -12,7 +17,7 @@ Keyboard firmware library for rp2040 chips written in rust
     - [x] multi layer action support
     - [x] multi rotary encoder support
     - [ ] action on holding down and rotating
-- [ ] NKRO
+- [x] NKRO
 - [ ] macros
 - [ ] row2col scanning
 - [ ] duplex matrix scanning
