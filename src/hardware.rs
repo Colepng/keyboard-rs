@@ -1,15 +1,15 @@
 use embedded_hal::digital::v2::InputPin;
 use rp2040_hal::gpio::DynPin;
 
-use crate::keycode::Keycodes;
+use crate::keycode::Keycode;
 
-pub struct Encoder<const LAYERS: usize> {
-    pub channel_a: DynPin,
-    pub channel_b: DynPin,
-    pub actions: [[Keycodes; 2]; LAYERS],
+pub struct Encoder {
+    channel_a: DynPin,
+    channel_b: DynPin,
+    pub(super) actions: &'static [[Keycode; 2]],
     state: u8,
     pulses: i8,
-    pub dir: Dir,
+    dir: Dir,
 }
 
 pub enum Dir {
@@ -18,10 +18,10 @@ pub enum Dir {
     Same,
 }
 
-impl<const LAYERS: usize> Encoder<LAYERS> {
+impl Encoder {
     pub const LOOKUP_TABLE: [i8; 16] = [0, -1, 1, 0, 1, 0, 0, -1, -1, 0, 0, 1, 0, 1, -1, 0];
 
-    pub fn new(channel_a: DynPin, channel_b: DynPin, actions: [[Keycodes; 2]; LAYERS]) -> Self {
+    pub fn new(channel_a: DynPin, channel_b: DynPin, actions: &'static [[Keycode; 2]]) -> Self {
         Encoder {
             channel_a,
             channel_b,
@@ -32,7 +32,7 @@ impl<const LAYERS: usize> Encoder<LAYERS> {
         }
     }
 
-    pub fn update(&mut self) {
+    pub(super) fn update(&mut self) {
         #[rustfmt::skip]
         let new_state: u8 = (self.channel_a.is_high().unwrap() as u8) << 1 | (self.channel_b.is_high().unwrap() as u8);
         if self.state & 0b0011 != new_state {
@@ -50,6 +50,19 @@ impl<const LAYERS: usize> Encoder<LAYERS> {
             self.pulses %= 4;
         } else {
             self.dir = Dir::Same;
+        }
+    }
+
+    pub(super) fn initialize(&mut self) {
+        self.channel_a.into_pull_up_input();
+        self.channel_b.into_pull_up_input();
+    }
+
+    pub(super) fn action(&self, layer: usize) -> Keycode {
+        match self.dir {
+            Dir::Cw => self.actions[layer][1],
+            Dir::Cww => self.actions[layer][0],
+            _ => Keycode::KC_NO,
         }
     }
 }

@@ -3,7 +3,7 @@
 #![feature(stmt_expr_attributes)] // allows the #[rustfmt::skip]
 
 use keyboard_rs::hardware::Encoder;
-use keyboard_rs::keycode::{Keycodes, Keycodes::*};
+use keyboard_rs::keycode::{Keycode, Keycode::*};
 use keyboard_rs::{init, matrix_scaning};
 
 use panic_halt as _;
@@ -17,26 +17,26 @@ fn main() -> ! {
     const NUMOFLAYES: usize = 2;
 
     #[rustfmt::skip]
-    const KEYS: [[[Keycodes; NUMOFCOL]; NUMOFROW]; NUMOFLAYES] = [
-        [
-            [KC_ESCAPE,     KC_1,       KC_2,       KC_3,       KC_4,       KC_5, KC_6, KC_7, KC_8, KC_9, KC_0, KC_MINUS, KC_EQUAL, KC_BACKSPACE], 
-            [KC_TAB, KC_Q,  KC_W,       KC_E,       KC_R,       KC_T,       KC_Y, KC_U, KC_I, KC_O, KC_P, KC_LEFT_BRACKET, KC_RIGHT_BRACKET,  KC_BACKSLASH], 
-            [KC_CAPS_LOCK,  KC_NO_KEY,  KC_A,       KC_S,       KC_D,       KC_F, KC_G, KC_H, KC_J, KC_K, KC_L, KC_SEMICOLON, KC_QUOTE, KC_ENTER], 
-            [KC_LEFT_SHIFT, KC_NO_KEY,  KC_Z,       KC_X,       KC_C,       KC_V, KC_B, KC_N, KC_M, KC_COMMA, KC_DOT, KC_SLASH, KC_NO_KEY, KC_RIGHT_SHIFT], 
-            [KC_LEFT_CTRL,  KC_LEFT_GUI,KC_NO_KEY,  KC_LEFT_ALT,KC_NO_KEY, KC_NO_KEY, KC_NO_KEY, KC_SPACE, KC_NO_KEY, KC_NO_KEY, KC_RIGHT_ALT, KC_MO(1), KC_APP, KC_RIGHT_CTRL],
+    const KEYS: &[&[&[Keycode]]] = &[
+        &[
+            &[KC_ESCAPE,     KC_1,       KC_2,       KC_3,       KC_4,       KC_5, KC_6, KC_7, KC_8, KC_9, KC_0, KC_MINUS, KC_EQUAL, KC_BACKSPACE], 
+            &[KC_TAB, KC_Q,  KC_W,       KC_E,       KC_R,       KC_T,       KC_Y, KC_U, KC_I, KC_O, KC_P, KC_LEFT_BRACKET, KC_RIGHT_BRACKET,  KC_BACKSLASH], 
+            &[KC_CAPS_LOCK,  KC_NO_KEY,  KC_A,       KC_S,       KC_D,       KC_F, KC_G, KC_H, KC_J, KC_K, KC_L, KC_SEMICOLON, KC_QUOTE, KC_ENTER], 
+            &[KC_LEFT_SHIFT, KC_NO_KEY,  KC_Z,       KC_X,       KC_C,       KC_V, KC_B, KC_N, KC_M, KC_COMMA, KC_DOT, KC_SLASH, KC_NO_KEY, KC_RIGHT_SHIFT], 
+            &[KC_LEFT_CTRL,  KC_LEFT_GUI,KC_NO_KEY,  KC_LEFT_ALT,KC_NO_KEY, KC_NO_KEY, KC_NO_KEY, KC_SPACE, KC_NO_KEY, KC_NO_KEY, KC_RIGHT_ALT, KC_MO(1), KC_APP, KC_RIGHT_CTRL],
         ],
-        [
-            [KC_GRAVE,     KC_F1,       KC_F2,       KC_F3,       KC_F4,       KC_F5, KC_F6, KC_F7, KC_F8, KC_F9, KC_F10, KC_F11, KC_F12, KC_DELETE_FORWARD], 
-            [KC_TAB, KC_Q,  KC_UP_ARROW,       KC_E,       KC_R,       KC_T,       KC_Y, KC_U, KC_I, KC_O, KC_P, KC_LEFT_BRACKET, KC_RIGHT_BRACKET, KC_BACKSLASH], 
-            [KC_CAPS_LOCK,  KC_NO_KEY,  KC_LEFT_ARROW,       KC_DOWN_ARROW,       KC_RIGHT_ARROW,       KC_F, KC_G, KC_H, KC_J, KC_K, KC_L, KC_SEMICOLON, KC_QUOTE, KC_ENTER], 
-            [KC_MPLAY_PAUSE, KC_NO_KEY,  KC_Z,       KC_X,       KC_C,       KC_V, KC_B, KC_N, KC_M, KC_COMMA, KC_DOT, KC_SLASH, KC_NO_KEY, KC_MNEXT], 
-            [KC_LEFT_CTRL,  KC_LEFT_GUI,KC_NO_KEY,  KC_LEFT_ALT,KC_NO_KEY, KC_NO_KEY, KC_NO_KEY, KC_SPACE, KC_NO_KEY, KC_NO_KEY, KC_RIGHT_ALT, KC_RIGHT_GUI, KC_APP, KC_MPREV],
+        &[
+            &[KC_GRAVE,     KC_F1,       KC_F2,       KC_F3,       KC_F4,       KC_F5, KC_F6, KC_F7, KC_F8, KC_F9, KC_F10, KC_F11, KC_F12, KC_DELETE_FORWARD], 
+            &[KC_TAB, KC_Q,  KC_UP_ARROW,       KC_E,       KC_R,       KC_T,       KC_Y, KC_U, KC_I, KC_O, KC_P, KC_LEFT_BRACKET, KC_RIGHT_BRACKET, KC_BACKSLASH], 
+            &[KC_CAPS_LOCK,  KC_NO_KEY,  KC_LEFT_ARROW,       KC_DOWN_ARROW,       KC_RIGHT_ARROW,       KC_F, KC_G, KC_H, KC_J, KC_K, KC_L, KC_SEMICOLON, KC_QUOTE, KC_ENTER], 
+            &[KC_MPLAY_PAUSE, KC_NO_KEY,  KC_Z,       KC_X,       KC_C,       KC_V, KC_B, KC_N, KC_M, KC_COMMA, KC_DOT, KC_SLASH, KC_NO_KEY, KC_MNEXT], 
+            &[KC_LEFT_CTRL,  KC_LEFT_GUI,KC_NO_KEY,  KC_LEFT_ALT,KC_NO_KEY, KC_NO_KEY, KC_NO_KEY, KC_SPACE, KC_NO_KEY, KC_NO_KEY, KC_RIGHT_ALT, KC_RIGHT_GUI, KC_APP, KC_MPREV],
         ],
     ];
 
-    let (pins, watchdog, delay) = init();
+    let (pins, board) = init();
 
-    let col: [DynPin; NUMOFCOL] = [
+    let col: &mut [DynPin] = &mut [
         pins.gpio26.into(),
         pins.gpio22.into(),
         pins.gpio16.into(),
@@ -52,7 +52,7 @@ fn main() -> ! {
         pins.gpio14.into(),
         pins.gpio15.into(),
     ];
-    let row: [DynPin; NUMOFROW] = [
+    let row: &mut [DynPin] = &mut [
         pins.gpio28.into(),
         pins.gpio5.into(),
         pins.gpio4.into(),
@@ -64,7 +64,7 @@ fn main() -> ! {
         pins.gpio9.into(),
         pins.gpio8.into(),
         #[rustfmt::skip]
-        [
+        &[
             [KC_NO, KC_NO],
             [KC_NO, KC_NO]
         ],
@@ -74,7 +74,7 @@ fn main() -> ! {
         pins.gpio7.into(),
         pins.gpio6.into(),
         #[rustfmt::skip]
-        [
+        &[
             [KC_MINUS, KEYS_2(&KC_LEFT_SHIFT, &KC_EQUAL)],
             [KC_NO, KC_NO],
         ],
@@ -84,18 +84,17 @@ fn main() -> ! {
         pins.gpio1.into(),
         pins.gpio0.into(),
         #[rustfmt::skip]
-        [
+        &[
             [KC_VOLDOWN, KC_VOLUP],
-            [KC_NO, KC_NO]
+            [KC_NO, KC_NO],
         ],
     );
 
-    matrix_scaning(
+    matrix_scaning::<NUMOFCOL, NUMOFROW, NUMOFLAYES, 3>(
+        board,
         col,
         row,
         KEYS,
         [encoder1, encoder2, encoder3],
-        watchdog,
-        delay,
     );
 }

@@ -12,7 +12,7 @@ Keyboard firmware library for rp2040 chips written in rust
     - [x] multi layer action support
     - [x] multi rotary encoder support
     - [ ] action on holding down and rotating
-- [ ] NKRO
+- [x] NKRO
 - [ ] macros
 - [ ] row2col scanning
 - [ ] duplex matrix scanning
@@ -23,4 +23,4 @@ Keyboard firmware library for rp2040 chips written in rust
 
 # Example warnings
 both onekey and late-night-engineering need the encoders feature to be enabled when building.
-Normally if you would enable it when you are declaring this library as a dependency
+Normally you would enable it when you are declaring this library as a dependency

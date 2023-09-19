@@ -1,8 +1,8 @@
-use crate::keycode::Keycodes;
+use crate::keycode::Keycode;
 
 pub struct Key {
     pub col: Option<usize>,
     pub row: Option<usize>,
-    pub keycode: Keycodes,
+    pub keycode: Keycode,
     pub encoder: bool,
 }

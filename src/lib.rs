@@ -1,53 +1,39 @@
 #![no_std]
 #![no_main]
+#![feature(slice_flatten)]
+#![feature(generic_const_exprs)]
 
 #[cfg(feature = "encoders")]
 pub mod hardware;
 pub mod key;
 mod keyboard;
 pub mod keycode;
-mod usb;
-use cortex_m::delay::Delay;
 use cortex_m::prelude::{_embedded_hal_watchdog_Watchdog, _embedded_hal_watchdog_WatchdogEnable};
-use embedded_hal::digital::v2::{InputPin, OutputPin};
-use fugit::ExtU32;
-use hal::pac::interrupt;
-use hal::Clock;
+use hal::usb::UsbBus;
+use hal::{Timer, Watchdog};
 #[cfg(feature = "encoders")]
 use hardware::Encoder;
 use keyboard::Keyboard;
-use keycode::Keycodes;
+use keycode::Keycode;
 use panic_halt as _;
 use rp2040_hal as hal;
 use rp2040_hal::gpio::{DynPin, Pins};
-use usb_device::{
-    class_prelude::UsbBusAllocator,
-    prelude::{UsbDevice, UsbDeviceBuilder, UsbVidPid},
-};
+use usb_device::class_prelude::UsbBusAllocator;
 
-// USB Human Interface Device (HID) Class support
-// use usbd_hid::descriptor::generator_prelude::*;
-use usbd_hid::descriptor::AsInputReport;
-use usbd_hid::descriptor::SerializedDescriptor;
-use usbd_hid::hid_class;
-
-use key::Key;
-use usb::Report;
-
-/// The USB Device Driver (shared with the interrupt).
-static mut USB_DEVICE: Option<UsbDevice<hal::usb::UsbBus>> = None;
-
-/// The USB Bus Driver (shared with the interrupt).
-static mut USB_BUS: Option<UsbBusAllocator<hal::usb::UsbBus>> = None;
-
-/// The USB Human Interface Device Driver (shared with the interrupt).
-static mut USB_HID: Option<hid_class::HIDClass<hal::usb::UsbBus>> = None;
+use fugit::ExtU32;
 
 /// External high-speed crystal on the Raspberry Pi Pico board is 12 MHz. Adjust
 /// if your board has a different frequency
 const XTAL_FREQ_HZ: u32 = 12_000_000u32;
 // maybe remove the watchdog in the future
-pub fn init() -> (Pins, hal::Watchdog, Delay) {
+
+pub struct Board {
+    usb_bus: UsbBusAllocator<UsbBus>,
+    timer: Timer,
+    watchdog: Watchdog,
+}
+
+pub fn init() -> (Pins, Board) {
     // setup peripherals
     let mut pac = hal::pac::Peripherals::take().unwrap();
 
@@ -57,6 +43,7 @@ pub fn init() -> (Pins, hal::Watchdog, Delay) {
 
     // setup serial input/output
     let sio = hal::Sio::new(pac.SIO);
+    let timer = hal::Timer::new(pac.TIMER, &mut pac.RESETS);
 
     // setup clock at 125Mhz
     let clocks = hal::clocks::init_clocks_and_plls(
@@ -78,7 +65,6 @@ pub fn init() -> (Pins, hal::Watchdog, Delay) {
         &mut pac.RESETS,
     );
 
-    // Set up the USB Communications Class Device driver
     let usb_bus = UsbBusAllocator::new(hal::usb::UsbBus::new(
         pac.USBCTRL_REGS,
         pac.USBCTRL_DPRAM,
@@ -86,127 +72,74 @@ pub fn init() -> (Pins, hal::Watchdog, Delay) {
         true,
         &mut pac.RESETS,
     ));
-    unsafe {
-        // Note (safety): This is safe as interrupts haven't been started yet
-        USB_BUS = Some(usb_bus);
-    }
 
-    let bus_ref = unsafe { USB_BUS.as_ref().unwrap() };
-
-    // Setup usb hid class
-    let usb_hid = hid_class::HIDClass::new_ep_in_with_settings(
-        bus_ref,
-        Report::desc(),
-        60,
-        hid_class::HidClassSettings {
-            subclass: hid_class::HidSubClass::NoSubClass,
-            config: hid_class::ProtocolModeConfig::ForceReport,
-            locale: hid_class::HidCountryCode::US,
-            protocol: hid_class::HidProtocol::Keyboard,
+    (
+        pins,
+        Board {
+            usb_bus,
+            timer,
+            watchdog,
         },
-    );
-
-    unsafe {
-        USB_HID = Some(usb_hid);
-    }
-
-    let usb_dev = UsbDeviceBuilder::new(bus_ref, UsbVidPid(0x16c0, 0x27da))
-        .manufacturer("Cole corp")
-        .product("One Key")
-        .serial_number("1")
-        .device_class(0)
-        .build();
-
-    unsafe {
-        // Note (safety): This is safe as interrupts haven't been started yet
-        USB_DEVICE = Some(usb_dev);
-    }
-
-    unsafe {
-        hal::pac::NVIC::unmask(hal::pac::Interrupt::USBCTRL_IRQ);
-    };
-
-    let core = hal::pac::CorePeripherals::take().unwrap();
-    let delay = cortex_m::delay::Delay::new(core.SYST, clocks.system_clock.freq().to_Hz());
-    (pins, watchdog, delay)
+    )
 }
 
+#[cfg(feature = "encoders")]
 pub fn matrix_scaning<
     const COLS: usize,
     const ROWS: usize,
     const LAYERS: usize,
-    #[cfg(feature = "encoders")] const NUM_OF_ENCODERS: usize,
+    const NUM_OF_ENCODERS: usize,
 >(
-    mut cols: [DynPin; COLS],
-    mut rows: [DynPin; ROWS],
-    keys: [[[Keycodes; COLS]; ROWS]; LAYERS],
-    #[cfg(feature = "encoders")] mut encoders: [Encoder<LAYERS>; NUM_OF_ENCODERS],
+    mut board: Board,
+    cols: &mut [DynPin],
+    rows: &mut [DynPin],
+    keys: &[&[&[Keycode]]],
+    encoders: [Encoder; NUM_OF_ENCODERS],
+) -> !
+where
+    [(); COLS * ROWS + { NUM_OF_ENCODERS }]: Sized,
+{
+    // Set up the USB Communications Class Device driver
 
-    mut watchdog: hal::Watchdog,
-    mut delay: Delay,
-) -> ! {
-    rows.iter_mut().for_each(|pin| {
-        pin.into_pull_down_input();
-    });
-    cols.iter_mut().for_each(|pin| {
-        pin.into_readable_output();
-    });
+    let timer = board.timer;
+    let usb_bus = board.usb_bus;
 
-    let mut keyboard = Keyboard::<COLS, ROWS, LAYERS>::new();
+    let mut keyboard =
+        Keyboard::<COLS, ROWS, NUM_OF_ENCODERS>::new(keys, cols, rows, encoders, &timer, &usb_bus);
 
-    #[cfg(feature = "encoders")]
-    for encoder in encoders.iter_mut() {
-        encoder.channel_a.into_pull_up_input();
-        encoder.channel_b.into_pull_up_input();
-    }
+    keyboard.initialize();
 
     loop {
         // feed watchdog
-        watchdog.feed();
+        board.watchdog.feed();
 
-        for (col, pin) in cols.iter_mut().enumerate() {
-            pin.set_high().unwrap();
-            for (row, pin) in rows.iter_mut().enumerate() {
-                if pin.is_high().unwrap() && keyboard.index <= 10 {
-                    // on press
-                    let key = Key {
-                        col: Some(col),
-                        row: Some(row),
-                        keycode: keys[keyboard.layer][row][col],
-                        encoder: false,
-                    };
-                    keyboard.key_press(key);
-                } else {
-                    // on release
-                    keyboard.key_release(keys, col, row);
-                }
-            }
-            pin.set_low().unwrap();
-        }
-
-        #[cfg(feature = "encoders")]
-        for encoder in encoders.iter_mut() {
-            keyboard.update_encoder(encoder, &mut delay);
-        }
-
-        push_input_report(keyboard.report).ok().unwrap_or(0);
-        keyboard.update_state();
-        keyboard.reset();
+        keyboard.periodic();
     }
 }
 
-fn push_input_report<T: AsInputReport>(report: T) -> Result<usize, usb_device::UsbError> {
-    critical_section::with(|_| unsafe {
-        // Now interrupts are disabled, grab the global variable and, if
-        // available, send it a HID report
-        USB_HID.as_mut().map(|hid| hid.push_input(&report))
-    })
-    .unwrap()
-}
+#[cfg(not(feature = "encoders"))]
+pub fn matrix_scaning<const COLS: usize, const ROWS: usize, const LAYERS: usize>(
+    mut board: Board,
+    cols: &mut [DynPin],
+    rows: &mut [DynPin],
+    keys: &[&[&[Keycode]]],
+) -> !
+where
+    [(); COLS * ROWS]: Sized,
+{
+    // Set up the USB Communications Class Device driver
 
-#[interrupt]
-unsafe fn USBCTRL_IRQ() {
-    let usb_hid = USB_HID.as_mut().unwrap();
-    let usb_device = USB_DEVICE.as_mut().unwrap();
-    usb_device.poll(&mut [usb_hid]);
+    let timer = board.timer;
+    let usb_bus = board.usb_bus;
+
+    let mut keyboard = Keyboard::<COLS, ROWS>::new(keys, cols, rows, &timer, &usb_bus);
+
+    keyboard.initialize();
+
+    loop {
+        // feed watchdog
+        board.watchdog.feed();
+
+        keyboard.periodic();
+    }
 }

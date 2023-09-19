@@ -1,173 +1,162 @@
-#[cfg(feature = "encoders")]
-use cortex_m::delay::Delay;
+use rp2040_hal::gpio::DynPin;
+use rp2040_hal::usb::UsbBus;
+use rp2040_hal::Timer;
+use usb_device::class_prelude::UsbBusAllocator;
 
 #[cfg(feature = "encoders")]
-use crate::hardware::{Dir, Encoder};
-use crate::key::Key;
-use crate::keycode::{Keycodes, Modifers};
-#[cfg(feature = "encoders")]
-use crate::push_input_report;
-use crate::usb::Report;
+use crate::hardware::Encoder;
+use crate::keycode::Keycode;
 
-pub struct Keyboard<const COLS: usize, const ROWS: usize, const LAYERS: usize> {
-    current_state: [[bool; COLS]; ROWS],
-    old_current_state: [[bool; COLS]; ROWS],
-    locked_keys: [[(bool, usize); COLS]; ROWS],
-    pub layer: usize,
-    last_layer: usize,
-    pub index: usize,
-    // pub report: KeyboardReport,
-    pub report: Report,
+mod encoder_controller;
+mod matrix;
+mod state;
+mod usb;
+
+use encoder_controller::EncoderController;
+use matrix::Matrix;
+use state::State;
+use usb::Usb;
+
+#[cfg(feature = "encoders")]
+pub struct Keyboard<
+    'a,
+    const NUM_OF_COLS: usize,
+    const NUM_OF_ROWS: usize,
+    const NUM_OF_ENCODERS: usize,
+> where
+    [(); NUM_OF_COLS * NUM_OF_ROWS + NUM_OF_ENCODERS]: Sized,
+{
+    state: State<'a, NUM_OF_COLS, NUM_OF_ROWS>,
+    matrix: Matrix<'a, NUM_OF_COLS, NUM_OF_ROWS>,
+    usb: Usb<'a>,
+    encoder_controller: EncoderController<NUM_OF_ENCODERS>,
+    buffer: [Keycode; NUM_OF_COLS * NUM_OF_ROWS + NUM_OF_ENCODERS],
 }
 
-impl<const COLS: usize, const ROWS: usize, const LAYERS: usize> Keyboard<COLS, ROWS, LAYERS> {
-    pub fn new() -> Self {
-        Keyboard {
-            current_state: [[false; COLS]; ROWS],
-            old_current_state: [[false; COLS]; ROWS],
-            locked_keys: [[(false, 0); COLS]; ROWS],
-            layer: 0,
-            last_layer: 0,
-            index: 0,
-            // report: KeyboardReport { modifier: 0x00, reserved: 0x00, leds: 0x00, keycodes: [0x00; 6] },
-            report: Report::default(),
+#[cfg(feature = "encoders")]
+impl<'a, const NUM_OF_COLS: usize, const NUM_OF_ROWS: usize, const NUM_OF_ENCODERS: usize>
+    Keyboard<'a, NUM_OF_COLS, NUM_OF_ROWS, NUM_OF_ENCODERS>
+where
+    [(); NUM_OF_COLS * NUM_OF_ROWS + NUM_OF_ENCODERS]: Sized,
+{
+    pub fn new(
+        layout: &'a [&[&[Keycode]]],
+        output_pins: &'a mut [DynPin],
+        input_pins: &'a mut [DynPin],
+        encoders: [Encoder; NUM_OF_ENCODERS],
+        timer: &'a Timer,
+        usb_bus: &'a UsbBusAllocator<UsbBus>,
+    ) -> Self {
+        Self {
+            state: State::new(layout),
+            matrix: Matrix::new(output_pins, input_pins, timer),
+            usb: Usb::new(usb_bus, timer),
+            encoder_controller: EncoderController::new(encoders),
+            buffer: [Keycode::KC_NO; NUM_OF_COLS * NUM_OF_ROWS + NUM_OF_ENCODERS],
         }
     }
 
-    // TODO push on every key press
-    pub fn key_press(&mut self, key: Key) {
-        if !key.encoder {
-            self.current_state[key.row.unwrap_or(0)][key.col.unwrap_or(0)] = true;
-        }
+    // initialize the keyboard
+    pub fn initialize(&mut self) {
+        // initialize the matrix
+        self.matrix.initialize();
+        // initialize the usb controller
+        self.usb.initialize();
 
-        if key.encoder || !self.locked_keys[key.row.unwrap_or(0)][key.col.unwrap_or(0)].0 {
-            match key.keycode {
-                Keycodes::KC_MO(x) => {
-                    if !key.encoder {
-                        self.locked_keys[key.row.unwrap_or(0)][key.col.unwrap_or(0)] =
-                            (true, self.layer);
-                        self.last_layer = self.layer;
-                        self.layer = x;
-                    }
-                }
-                Keycodes::KEYS_2(key_1, key_2) => {
-                    let key = Key {
-                        col: None,
-                        row: None,
-                        keycode: *key_1,
-                        encoder: false,
-                    };
-                    self.key_press(key);
-                    let key = Key {
-                        col: None,
-                        row: None,
-                        keycode: *key_2,
-                        encoder: false,
-                    };
-                    self.key_press(key);
-                }
-                Keycodes::KC_LAYER(x) => self.layer = x,
-                Keycodes::KC_LEFT_CTRL => {
-                    self.report.modifier |= Modifers::MOD_LCTRL as u8;
-                }
-                Keycodes::KC_LEFT_SHIFT => {
-                    self.report.modifier |= Modifers::MOD_LSHIFT as u8;
-                }
-                Keycodes::KC_LEFT_ALT => {
-                    self.report.modifier |= Modifers::MOD_LALT as u8;
-                }
-                Keycodes::KC_LEFT_GUI => {
-                    self.report.modifier |= Modifers::MOD_LGUI as u8;
-                }
-                Keycodes::KC_RIGHT_CTRL => {
-                    self.report.modifier |= Modifers::MOD_LCTRL as u8;
-                }
-                Keycodes::KC_RIGHT_SHIFT => {
-                    self.report.modifier |= Modifers::MOD_RSHIFT as u8;
-                }
-                Keycodes::KC_RIGHT_ALT => {
-                    self.report.modifier |= Modifers::MOD_RALT as u8;
-                }
-                Keycodes::KC_RIGHT_GUI => {
-                    self.report.modifier |= Modifers::MOD_RGUI as u8;
-                }
-                _ if key.keycode.is_consumer() => {
-                    if let Ok(keycode) = key.keycode.try_into() {
-                        self.report.consumer_control = keycode;
-                    }
-                }
-                _ => {
-                    if let Ok(keycode) = key.keycode.try_into() {
-                        self.add_key(keycode);
-                    }
-                }
-            }
-        }
+        // initialize the encoder controller
+        #[cfg(feature = "encoders")]
+        self.encoder_controller.initialize();
     }
 
-    fn add_key(&mut self, keycode: u8) {
-        self.report.keycodes[self.index] = keycode;
-        self.index += 1;
-    }
+    // update the keyboard
+    pub fn periodic(&mut self) {
+        if self.matrix.scan(&mut self.state) {
+            let flatten_state = self.matrix.state.flatten();
+            let mut index = 0;
 
-    pub fn key_release(
-        &mut self,
-        keys: [[[Keycodes; COLS]; ROWS]; LAYERS],
-        col: usize,
-        row: usize,
-    ) {
-        if self.old_current_state[row][col] {
-            match keys[self.locked_keys[row][col].1][row][col] {
-                Keycodes::KC_LAYER(x) => self.layer = x,
-                Keycodes::KC_MO(_) => {
-                    self.layer = self.last_layer;
-                    self.locked_keys[row][col] = (false, self.layer);
-                }
-                _ => {}
-            }
+            flatten_state.iter().for_each(|keycode| {
+                self.buffer[index] = *keycode;
+                index += 1;
+            });
+
+            #[cfg(feature = "encoders")]
+            self.encoder_controller
+                .encoders_state
+                .iter()
+                .for_each(|keycode| {
+                    self.buffer[index] = *keycode;
+                    index += 1;
+                });
+
+            self.usb.write_keyboard_report(&self.buffer);
+            self.usb.write_consumer_report(&self.buffer);
         }
-        self.current_state[row][col] = false;
-    }
 
-    #[cfg(feature = "encoders")]
-    pub fn update_encoder(&mut self, encoder: &mut Encoder<LAYERS>, delay: &mut Delay) {
-        encoder.update();
-        match encoder.dir {
-            Dir::Cw => {
-                let keycode = encoder.actions[self.layer][1];
-                let key = Key {
-                    col: None,
-                    row: None,
-                    keycode,
-                    encoder: true,
-                };
-                self.key_press(key);
-                delay.delay_ms(30);
-                push_input_report(self.report).ok().unwrap_or(0);
-            }
-            Dir::Cww => {
-                let keycode = encoder.actions[self.layer][0];
-                let key = Key {
-                    col: None,
-                    row: None,
-                    keycode,
-                    encoder: true,
-                };
-                self.key_press(key);
-                delay.delay_ms(30);
-                push_input_report(self.report).ok().unwrap_or(0);
-            }
-            _ => {}
+        #[cfg(feature = "encoders")]
+        {
+            self.encoder_controller.periodic();
+            self.encoder_controller.encoders_state =
+                self.encoder_controller.actions(self.state.layer());
+        }
+        self.usb.periodic();
+    }
+}
+
+#[cfg(not(feature = "encoders"))]
+pub struct Keyboard<'a, const NUM_OF_COLS: usize, const NUM_OF_ROWS: usize>
+where
+    [(); NUM_OF_COLS * NUM_OF_ROWS]: Sized,
+{
+    state: State<'a, NUM_OF_COLS, NUM_OF_ROWS>,
+    matrix: Matrix<'a, NUM_OF_COLS, NUM_OF_ROWS>,
+    usb: Usb<'a>,
+    #[cfg(not(feature = "encoders"))]
+    buffer: [Keycode; NUM_OF_COLS * NUM_OF_ROWS],
+}
+
+#[cfg(not(feature = "encoders"))]
+impl<'a, const NUM_OF_COLS: usize, const NUM_OF_ROWS: usize> Keyboard<'a, NUM_OF_COLS, NUM_OF_ROWS>
+where
+    [(); NUM_OF_COLS * NUM_OF_ROWS]: Sized,
+{
+    pub fn new(
+        layout: &'a [&[&[Keycode]]],
+        output_pins: &'a mut [DynPin],
+        input_pins: &'a mut [DynPin],
+        timer: &'a Timer,
+        usb_bus: &'a UsbBusAllocator<UsbBus>,
+    ) -> Self {
+        Self {
+            state: State::new(layout),
+            matrix: Matrix::new(output_pins, input_pins, timer),
+            usb: Usb::new(usb_bus, timer),
+            buffer: [Keycode::KC_NO; NUM_OF_COLS * NUM_OF_ROWS],
         }
     }
 
-    pub fn update_state(&mut self) {
-        self.old_current_state = self.current_state;
+    // initialize the keyboard
+    pub fn initialize(&mut self) {
+        // initialize the matrix
+        self.matrix.initialize();
+        // initialize the usb controller
+        self.usb.initialize();
     }
 
-    pub fn reset(&mut self) {
-        self.index = 0;
-        // self.report = KeyboardReport { modifier: 0x00, reserved: 0x00, leds: 0x00, keycodes: [0x00; 6] };
-        self.report = Report::default();
+    // update the keyboard
+    pub fn periodic(&mut self) {
+        if self.matrix.scan(&mut self.state) {
+            let flatten_state = self.matrix.state.flatten();
+            let mut index = 0;
+
+            flatten_state.iter().for_each(|keycode| {
+                self.buffer[index] = *keycode;
+                index += 1;
+            });
+
+            self.usb.write_keyboard_report(&self.buffer);
+            self.usb.write_consumer_report(&self.buffer);
+        }
+
+        self.usb.periodic();
     }
 }

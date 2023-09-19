@@ -1,8 +1,8 @@
-use self::Keycodes::*;
-#[derive(Copy, Clone)]
+use self::Keycode::*;
+#[derive(Copy, Clone, PartialEq)]
 #[allow(non_camel_case_types, unused)]
 #[repr(u8)]
-pub enum Keycodes {
+pub enum Keycode {
     KC_NO = 0x00,
 
     KC_A = 0x04,
@@ -105,15 +105,34 @@ pub enum Keycodes {
     KC_MO(usize),
     KC_NO_KEY,
 
-    KEYS_2(&'static Keycodes, &'static Keycodes),
+    KEYS_2(&'static Keycode, &'static Keycode),
 }
 
-impl Keycodes {
+impl Keycode {
     pub fn is_consumer(&self) -> bool {
         matches!(
             self,
-            Self::KC_MPREV | Self::KC_MNEXT | Self::KC_MSTOP | Self::KC_MPLAY_PAUSE
+            Self::KC_MNEXT
+                | Self::KC_MPREV
+                | Self::KC_MSTOP
+                | Self::KC_MPLAY_PAUSE
+                | Self::KC_MUTE
+                | Self::KC_VOLUP
+                | Self::KC_VOLDOWN
         )
+    }
+
+    pub fn into_consumer(&self) -> Option<u16> {
+        match self {
+            Self::KC_MNEXT => Some(0xB5),
+            Self::KC_MPREV => Some(0xB6),
+            Self::KC_MSTOP => Some(0xB7),
+            Self::KC_MPLAY_PAUSE => Some(0xCD),
+            Self::KC_MUTE => Some(0xE2),
+            Self::KC_VOLUP => Some(0xE9),
+            Self::KC_VOLDOWN => Some(0xEA),
+            _ => None,
+        }
     }
 }
 
@@ -124,7 +143,7 @@ impl Keycodes {
 //     }
 // }
 
-impl TryInto<u8> for Keycodes {
+impl TryInto<u8> for Keycode {
     type Error = &'static str;
     fn try_into(self) -> Result<u8, Self::Error> {
         match self {
@@ -231,7 +250,7 @@ impl TryInto<u8> for Keycodes {
     }
 }
 
-impl TryInto<u8> for &Keycodes {
+impl TryInto<u8> for &Keycode {
     type Error = &'static str;
     fn try_into(self) -> Result<u8, Self::Error> {
         match self {
@@ -334,35 +353,6 @@ impl TryInto<u8> for &Keycodes {
             KC_MPLAY_PAUSE => Ok(0xCD),
 
             _ => Err("Can't convert non usb key code"),
-        }
-    }
-}
-
-#[derive(Copy, Clone)]
-#[allow(non_camel_case_types, unused)]
-#[repr(u8)]
-pub enum Modifers {
-    MOD_LCTRL = 0b00000001,
-    MOD_LSHIFT = 0b00000010,
-    MOD_LALT = 0b00000100,
-    MOD_LGUI = 0b00001000,
-    MOD_RCTRL = 0b00010000,
-    MOD_RSHIFT = 0b00100000,
-    MOD_RALT = 0b01000000,
-    MOD_RGUI = 0b10000000,
-}
-
-impl From<Modifers> for u8 {
-    fn from(value: Modifers) -> Self {
-        match value {
-            Modifers::MOD_LCTRL => 0b00000001,
-            Modifers::MOD_LSHIFT => 0b00000010,
-            Modifers::MOD_LALT => 0b00000100,
-            Modifers::MOD_LGUI => 0b00001000,
-            Modifers::MOD_RCTRL => 0b00010000,
-            Modifers::MOD_RSHIFT => 0b00100000,
-            Modifers::MOD_RALT => 0b01000000,
-            Modifers::MOD_RGUI => 0b10000000,
         }
     }
 }

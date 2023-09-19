@@ -1,8 +1,9 @@
 #![no_std]
 #![no_main]
+#![feature(stmt_expr_attributes)] // enables skipping rustfmt
 
 use keyboard_rs::hardware::Encoder;
-use keyboard_rs::keycode::{Keycodes, Keycodes::*};
+use keyboard_rs::keycode::{Keycode, Keycode::*};
 use keyboard_rs::{init, matrix_scaning};
 
 use panic_halt as _;
@@ -14,30 +15,38 @@ fn main() -> ! {
     const NUMOFCOL: usize = 1;
     const NUMOFROW: usize = 1;
     const NUMOFLAYES: usize = 2;
+    const NUMOFENCODERS: usize = 1;
 
     #[rustfmt::skip]
-    const KEYS: [[[Keycodes; NUMOFCOL]; NUMOFROW]; NUMOFLAYES] = [
-        [
-            [KC_LAYER(1)]
-        ], [
-            [KC_LAYER(0)]
+    const KEYS: &[&[&[Keycode]]] = &[
+        &[
+            &[KC_LAYER(1)]
+        ],
+        &[
+            &[KC_LAYER(0)]
         ]
     ];
 
-    let (pins, watchdog, delay) = init();
+    let (pins, board) = init();
 
-    let col: [DynPin; NUMOFCOL] = [pins.gpio27.into()];
-    let row: [DynPin; NUMOFROW] = [pins.gpio18.into()];
+    let col: &mut [DynPin] = &mut [pins.gpio27.into()];
+    let row: &mut [DynPin] = &mut [pins.gpio18.into()];
 
     let encoder = Encoder::new(
         pins.gpio22.into(),
         pins.gpio21.into(),
         #[rustfmt::skip]
-        [
-            [KC_VOLUP, KC_B],
-            [KC_VOLDOWN, KC_A],
+        &[
+            [KC_VOLDOWN, KC_VOLUP],
+            [KC_B, KC_A],
         ],
     );
 
-    matrix_scaning(col, row, KEYS, [encoder], watchdog, delay);
+    matrix_scaning::<NUMOFCOL, NUMOFROW, NUMOFLAYES, NUMOFENCODERS>(
+        board,
+        col,
+        row,
+        KEYS,
+        [encoder],
+    );
 }
