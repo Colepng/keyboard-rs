@@ -100,7 +100,20 @@ impl<'a> Usb<'a> {
         let keyboard = keys
             .into_iter()
             .filter(|keycode| !keycode.is_consumer())
-            .map(|keycode| page::Keyboard::from(keycode.try_into().unwrap_or(0)));
+            .map(|keycode| {
+                if let Keycode::KEYS_2(key1, key2) = keycode {
+                    [
+                        page::Keyboard::from((**key1).try_into().unwrap_or(0)),
+                        page::Keyboard::from((**key2).try_into().unwrap_or(0)),
+                    ]
+                } else {
+                    [
+                        page::Keyboard::from(keycode.try_into().unwrap_or(0)),
+                        page::Keyboard::ErrorUndefine,
+                    ]
+                }
+            })
+            .flatten();
 
         match self
             .usb_hid_class
@@ -121,11 +134,22 @@ impl<'a> Usb<'a> {
         keys.into_iter()
             .filter_map(|keycode| {
                 if keycode.is_consumer() {
-                    Some(page::Consumer::from(keycode.into_consumer().unwrap_or(0)))
+                    Some(if let Keycode::KEYS_2(key1, key2) = keycode {
+                        [
+                            page::Consumer::from((**key1).into_consumer().unwrap_or(0)),
+                            page::Consumer::from((**key2).into_consumer().unwrap_or(0)),
+                        ]
+                    } else {
+                        [
+                            page::Consumer::from(keycode.into_consumer().unwrap_or(0)),
+                            page::Consumer::Unassigned,
+                        ]
+                    })
                 } else {
                     None
                 }
             })
+            .flatten()
             .enumerate()
             .for_each(|(index, consumer)| {
                 if index < 4 {

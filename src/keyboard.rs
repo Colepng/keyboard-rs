@@ -12,10 +12,10 @@ mod matrix;
 mod state;
 mod usb;
 
+use encoder_controller::EncoderController;
 use matrix::Matrix;
 use state::State;
 use usb::Usb;
-use encoder_controller::EncoderController;
 
 #[cfg(feature = "encoders")]
 pub struct Keyboard<

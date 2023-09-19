@@ -83,7 +83,7 @@ pub fn init() -> (Pins, Board) {
     )
 }
 
-#[cfg(feature = "encoders")] 
+#[cfg(feature = "encoders")]
 pub fn matrix_scaning<
     const COLS: usize,
     const ROWS: usize,
@@ -104,7 +104,8 @@ where
     let timer = board.timer;
     let usb_bus = board.usb_bus;
 
-    let mut keyboard = Keyboard::<COLS, ROWS, NUM_OF_ENCODERS>::new(keys, cols, rows, encoders, &timer, &usb_bus);
+    let mut keyboard =
+        Keyboard::<COLS, ROWS, NUM_OF_ENCODERS>::new(keys, cols, rows, encoders, &timer, &usb_bus);
 
     keyboard.initialize();
 
@@ -116,13 +117,8 @@ where
     }
 }
 
-
-#[cfg(not(feature = "encoders"))] 
-pub fn matrix_scaning<
-    const COLS: usize,
-    const ROWS: usize,
-    const LAYERS: usize,
->(
+#[cfg(not(feature = "encoders"))]
+pub fn matrix_scaning<const COLS: usize, const ROWS: usize, const LAYERS: usize>(
     mut board: Board,
     cols: &mut [DynPin],
     rows: &mut [DynPin],
