@@ -7,6 +7,7 @@ use usb_device::class_prelude::UsbBusAllocator;
 use crate::hardware::Encoder;
 use crate::keycode::Keycode;
 
+mod encoder_controller;
 mod matrix;
 mod state;
 mod usb;
@@ -14,48 +15,7 @@ mod usb;
 use matrix::Matrix;
 use state::State;
 use usb::Usb;
-
-#[cfg(feature = "encoders")]
-struct EncoderController<const NUM_OF_ENCODERS: usize> {
-    encoders: [Encoder; NUM_OF_ENCODERS],
-    encoders_state: [Keycode; NUM_OF_ENCODERS],
-}
-
-#[cfg(feature = "encoders")]
-impl<'a, const NUM_OF_ENCODERS: usize> EncoderController<NUM_OF_ENCODERS> {
-    fn new(encoders: [Encoder; NUM_OF_ENCODERS]) -> Self {
-        Self {
-            encoders,
-            encoders_state: [Keycode::KC_A; NUM_OF_ENCODERS],
-        }
-    }
-
-    // initializes the encoder controller
-    fn initialize(&mut self) {
-        self.encoders
-            .iter_mut()
-            .for_each(|encoder| encoder.initialize());
-    }
-
-    fn periodic(&mut self) {
-        self.encoders
-            .iter_mut()
-            .for_each(|encoder| encoder.update());
-    }
-
-    fn actions(&self, layer: usize) -> [Keycode; NUM_OF_ENCODERS] {
-        let mut actions = [Keycode::KC_NO; NUM_OF_ENCODERS];
-
-        self.encoders
-            .iter()
-            .map(|encoder| encoder.action(layer))
-            .enumerate()
-            .for_each(|(index, action)| {
-                actions[index] = action.unwrap_or(Keycode::KC_NO);
-            });
-        actions
-    }
-}
+use encoder_controller::EncoderController;
 
 #[cfg(feature = "encoders")]
 pub struct Keyboard<
@@ -142,13 +102,9 @@ where
     }
 }
 
-
 #[cfg(not(feature = "encoders"))]
-pub struct Keyboard<
-    'a,
-    const NUM_OF_COLS: usize,
-    const NUM_OF_ROWS: usize,
-> where
+pub struct Keyboard<'a, const NUM_OF_COLS: usize, const NUM_OF_ROWS: usize>
+where
     [(); NUM_OF_COLS * NUM_OF_ROWS]: Sized,
 {
     state: State<'a, NUM_OF_COLS, NUM_OF_ROWS>,
@@ -158,10 +114,8 @@ pub struct Keyboard<
     buffer: [Keycode; NUM_OF_COLS * NUM_OF_ROWS],
 }
 
-
 #[cfg(not(feature = "encoders"))]
-impl<'a, const NUM_OF_COLS: usize, const NUM_OF_ROWS: usize>
-    Keyboard<'a, NUM_OF_COLS, NUM_OF_ROWS>
+impl<'a, const NUM_OF_COLS: usize, const NUM_OF_ROWS: usize> Keyboard<'a, NUM_OF_COLS, NUM_OF_ROWS>
 where
     [(); NUM_OF_COLS * NUM_OF_ROWS]: Sized,
 {

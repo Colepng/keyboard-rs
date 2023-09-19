@@ -58,11 +58,11 @@ impl Encoder {
         self.channel_b.into_pull_up_input();
     }
 
-    pub(super) fn action(&self, layer: usize) -> Option<Keycode> {
+    pub(super) fn action(&self, layer: usize) -> Keycode {
         match self.dir {
-            Dir::Cw => Some(self.actions[layer][1]),
-            Dir::Cww => Some(self.actions[layer][0]),
-            _ => None,
+            Dir::Cw => self.actions[layer][1],
+            Dir::Cww => self.actions[layer][0],
+            _ => Keycode::KC_NO,
         }
     }
 }
