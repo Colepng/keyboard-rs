@@ -64,7 +64,7 @@ fn main() -> ! {
         pins.gpio9.into(),
         pins.gpio8.into(),
         #[rustfmt::skip]
-        [
+        &[
             [KC_NO, KC_NO],
             [KC_NO, KC_NO]
         ],
@@ -74,7 +74,7 @@ fn main() -> ! {
         pins.gpio7.into(),
         pins.gpio6.into(),
         #[rustfmt::skip]
-        [
+        &[
             [KC_MINUS, KEYS_2(&KC_LEFT_SHIFT, &KC_EQUAL)],
             [KC_NO, KC_NO],
         ],
@@ -84,9 +84,9 @@ fn main() -> ! {
         pins.gpio1.into(),
         pins.gpio0.into(),
         #[rustfmt::skip]
-        [
+        &[
             [KC_VOLDOWN, KC_VOLUP],
-            [KC_NO, KC_NO]
+            [KC_NO, KC_NO],
         ],
     );
 

@@ -9,9 +9,13 @@ use usb_device::{
 };
 use usbd_human_interface_device::{
     device::{
-        consumer::{ConsumerControl, ConsumerControlConfig, MultipleConsumerReport},
+        consumer::{
+            ConsumerControl, ConsumerControlConfig, MultipleConsumerReport,
+            MULTIPLE_CODE_REPORT_DESCRIPTOR,
+        },
         keyboard::{NKROBootKeyboard, NKROBootKeyboardConfig},
     },
+    interface::InterfaceBuilder,
     page,
     usb_class::{UsbHidClass, UsbHidClassBuilder},
     UsbHidError,
@@ -24,7 +28,6 @@ pub(super) struct Usb<'a> {
     usb_hid_class:
         UsbHidClass<'a, UsbBus, HList!(ConsumerControl<'a, UsbBus>, NKROBootKeyboard<'a, UsbBus>)>,
     usb_tick_timer: RPCountDown<'a>,
-    usb_consumer_timer: RPCountDown<'a>,
     last_consumer_report: MultipleConsumerReport,
 }
 
@@ -32,7 +35,15 @@ impl<'a> Usb<'a> {
     pub(super) fn new(usb_bus: &'a UsbBusAllocator<UsbBus>, timer: &'a Timer) -> Self {
         let usb_hid_class = UsbHidClassBuilder::new()
             .add_device(NKROBootKeyboardConfig::default())
-            .add_device(ConsumerControlConfig::default())
+            .add_device(ConsumerControlConfig::new(
+                InterfaceBuilder::new(MULTIPLE_CODE_REPORT_DESCRIPTOR)
+                    .unwrap()
+                    .description("Consumer Control")
+                    .in_endpoint(10.millis())
+                    .unwrap()
+                    .without_out_endpoint()
+                    .build(),
+            ))
             .build(usb_bus);
 
         let usb_dev = UsbDeviceBuilder::new(usb_bus, UsbVidPid(0x1209, 0x0001))
@@ -43,20 +54,16 @@ impl<'a> Usb<'a> {
 
         let usb_tick_timer = timer.count_down();
 
-        let usb_consumer_timer = timer.count_down();
-
         Self {
             usb_dev,
             usb_hid_class,
             usb_tick_timer,
-            usb_consumer_timer,
             last_consumer_report: MultipleConsumerReport::default(),
         }
     }
 
     pub(super) fn initialize(&mut self) {
-        self.usb_tick_timer.start(10.millis());
-        self.usb_consumer_timer.start(50.millis());
+        self.usb_tick_timer.start(1.millis());
     }
 
     pub(super) fn periodic(&mut self) {
@@ -146,12 +153,4 @@ impl<'a> Usb<'a> {
             }
         }
     }
-
-    pub(super) fn should_write_consumer_report(&mut self) -> bool {
-        self.usb_consumer_timer.wait().is_ok()
-    }
-
-    // pub(super) fn should_write_report(&mut self) -> bool {
-    //     self.usb_tick_timer.wait().is_ok()
-    // }
 }

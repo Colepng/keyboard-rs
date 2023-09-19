@@ -1,16 +1,16 @@
 #![no_std]
 #![no_main]
 #![feature(slice_flatten)]
+#![feature(generic_const_exprs)]
 
 #[cfg(feature = "encoders")]
 pub mod hardware;
 pub mod key;
 mod keyboard;
 pub mod keycode;
-use cortex_m::delay::Delay;
 use cortex_m::prelude::{_embedded_hal_watchdog_Watchdog, _embedded_hal_watchdog_WatchdogEnable};
 use hal::usb::UsbBus;
-use hal::{Clock, Timer, Watchdog};
+use hal::{Timer, Watchdog};
 #[cfg(feature = "encoders")]
 use hardware::Encoder;
 use keyboard::Keyboard;
@@ -31,7 +31,6 @@ pub struct Board {
     usb_bus: UsbBusAllocator<UsbBus>,
     timer: Timer,
     watchdog: Watchdog,
-    delay: Delay,
 }
 
 pub fn init() -> (Pins, Board) {
@@ -74,53 +73,77 @@ pub fn init() -> (Pins, Board) {
         &mut pac.RESETS,
     ));
 
-    let core = hal::pac::CorePeripherals::take().unwrap();
-    let delay = cortex_m::delay::Delay::new(core.SYST, clocks.system_clock.freq().to_Hz());
-
     (
         pins,
         Board {
             usb_bus,
             timer,
             watchdog,
-            delay,
         },
     )
 }
 
+#[cfg(feature = "encoders")] 
 pub fn matrix_scaning<
     const COLS: usize,
     const ROWS: usize,
     const LAYERS: usize,
-    #[cfg(feature = "encoders")] const NUM_OF_ENCODERS: usize,
+    const NUM_OF_ENCODERS: usize,
 >(
     mut board: Board,
     cols: &mut [DynPin],
     rows: &mut [DynPin],
     keys: &[&[&[Keycode]]],
-    #[cfg(feature = "encoders")] mut encoders: [Encoder<LAYERS>; NUM_OF_ENCODERS],
-) -> ! {
+    encoders: [Encoder; NUM_OF_ENCODERS],
+) -> !
+where
+    [(); COLS * ROWS + { NUM_OF_ENCODERS }]: Sized,
+{
     // Set up the USB Communications Class Device driver
 
-    let mut keyboard = Keyboard::<COLS, ROWS>::new(keys, cols, rows, &board.timer, &board.usb_bus);
+    let timer = board.timer;
+    let usb_bus = board.usb_bus;
+
+    let mut keyboard = Keyboard::<COLS, ROWS, NUM_OF_ENCODERS>::new(keys, cols, rows, encoders, &timer, &usb_bus);
 
     keyboard.initialize();
-
-    #[cfg(feature = "encoders")]
-    for encoder in encoders.iter_mut() {
-        encoder.channel_a.into_pull_up_input();
-        encoder.channel_b.into_pull_up_input();
-    }
 
     loop {
         // feed watchdog
         board.watchdog.feed();
 
         keyboard.periodic();
+    }
+}
 
-        #[cfg(feature = "encoders")]
-        for encoder in encoders.iter_mut() {
-            // keyboard.update_encoder(encoder, &mut delay);
-        }
+
+#[cfg(not(feature = "encoders"))] 
+pub fn matrix_scaning<
+    const COLS: usize,
+    const ROWS: usize,
+    const LAYERS: usize,
+>(
+    mut board: Board,
+    cols: &mut [DynPin],
+    rows: &mut [DynPin],
+    keys: &[&[&[Keycode]]],
+) -> !
+where
+    [(); COLS * ROWS]: Sized,
+{
+    // Set up the USB Communications Class Device driver
+
+    let timer = board.timer;
+    let usb_bus = board.usb_bus;
+
+    let mut keyboard = Keyboard::<COLS, ROWS>::new(keys, cols, rows, &timer, &usb_bus);
+
+    keyboard.initialize();
+
+    loop {
+        // feed watchdog
+        board.watchdog.feed();
+
+        keyboard.periodic();
     }
 }
