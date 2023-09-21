@@ -1,25 +1,25 @@
 #![no_std]
-#![no_main]
 #![feature(slice_flatten)]
 #![feature(generic_const_exprs)]
 
 #[cfg(feature = "encoders")]
 pub mod hardware;
-pub mod key;
 mod keyboard;
 pub mod keycode;
 use cortex_m::prelude::{_embedded_hal_watchdog_Watchdog, _embedded_hal_watchdog_WatchdogEnable};
 use hal::usb::UsbBus;
 use hal::{Timer, Watchdog};
 #[cfg(feature = "encoders")]
-use hardware::Encoder;
+use hardware::encoder::Encoder;
 use keyboard::Keyboard;
 use keycode::Keycode;
 use panic_halt as _;
 use rp2040_hal as hal;
-use rp2040_hal::gpio::{DynPin, Pins};
+use rp2040_hal::gpio::Pins;
 use usb_device::class_prelude::UsbBusAllocator;
 
+use embedded_hal::digital::v2::OutputPin;
+use embedded_hal::digital::v2::InputPin;
 use fugit::ExtU32;
 
 /// External high-speed crystal on the Raspberry Pi Pico board is 12 MHz. Adjust
@@ -43,7 +43,6 @@ pub fn init() -> (Pins, Board) {
 
     // setup serial input/output
     let sio = hal::Sio::new(pac.SIO);
-    let timer = hal::Timer::new(pac.TIMER, &mut pac.RESETS);
 
     // setup clock at 125Mhz
     let clocks = hal::clocks::init_clocks_and_plls(
@@ -57,6 +56,8 @@ pub fn init() -> (Pins, Board) {
     )
     .ok()
     .unwrap();
+
+    let timer = hal::Timer::new(pac.TIMER, &mut pac.RESETS, &clocks);
 
     let pins = Pins::new(
         pac.IO_BANK0,
@@ -89,12 +90,15 @@ pub fn matrix_scaning<
     const ROWS: usize,
     const LAYERS: usize,
     const NUM_OF_ENCODERS: usize,
+    EncoderPin: InputPin,
+    Output: OutputPin,
+    Input: InputPin,
 >(
     mut board: Board,
-    cols: &mut [DynPin],
-    rows: &mut [DynPin],
+    cols: &mut [Output],
+    rows: &mut [Input],
     keys: &[&[&[Keycode]]],
-    encoders: [Encoder; NUM_OF_ENCODERS],
+    encoders: [Encoder<EncoderPin>; NUM_OF_ENCODERS],
 ) -> !
 where
     [(); COLS * ROWS + { NUM_OF_ENCODERS }]: Sized,
@@ -105,7 +109,9 @@ where
     let usb_bus = board.usb_bus;
 
     let mut keyboard =
-        Keyboard::<COLS, ROWS, NUM_OF_ENCODERS>::new(keys, cols, rows, encoders, &timer, &usb_bus);
+        Keyboard::<COLS, ROWS, NUM_OF_ENCODERS, EncoderPin, Output, Input>::new(
+            keys, cols, rows, encoders, &timer, &usb_bus,
+        );
 
     keyboard.initialize();
 

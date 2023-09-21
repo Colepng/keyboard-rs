@@ -1,10 +1,10 @@
-use rp2040_hal::gpio::DynPin;
+use embedded_hal::digital::v2::{InputPin, OutputPin};
 use rp2040_hal::usb::UsbBus;
 use rp2040_hal::Timer;
 use usb_device::class_prelude::UsbBusAllocator;
 
 #[cfg(feature = "encoders")]
-use crate::hardware::Encoder;
+use crate::hardware::encoder::Encoder;
 use crate::keycode::Keycode;
 
 mod encoder_controller;
@@ -23,27 +23,37 @@ pub struct Keyboard<
     const NUM_OF_COLS: usize,
     const NUM_OF_ROWS: usize,
     const NUM_OF_ENCODERS: usize,
+    EncoderPin: InputPin,
+    Output: OutputPin,
+    Input: InputPin,
 > where
     [(); NUM_OF_COLS * NUM_OF_ROWS + NUM_OF_ENCODERS]: Sized,
 {
     state: State<'a, NUM_OF_COLS, NUM_OF_ROWS>,
-    matrix: Matrix<'a, NUM_OF_COLS, NUM_OF_ROWS>,
+    matrix: Matrix<'a, NUM_OF_COLS, NUM_OF_ROWS, Output, Input>,
     usb: Usb<'a>,
-    encoder_controller: EncoderController<NUM_OF_ENCODERS>,
+    encoder_controller: EncoderController<NUM_OF_ENCODERS, EncoderPin>,
     buffer: [Keycode; NUM_OF_COLS * NUM_OF_ROWS + NUM_OF_ENCODERS],
 }
 
 #[cfg(feature = "encoders")]
-impl<'a, const NUM_OF_COLS: usize, const NUM_OF_ROWS: usize, const NUM_OF_ENCODERS: usize>
-    Keyboard<'a, NUM_OF_COLS, NUM_OF_ROWS, NUM_OF_ENCODERS>
+impl<
+        'a,
+        const NUM_OF_COLS: usize,
+        const NUM_OF_ROWS: usize,
+        const NUM_OF_ENCODERS: usize,
+        EncoderPin: InputPin,
+        Output: OutputPin,
+        Input: InputPin,
+    > Keyboard<'a, NUM_OF_COLS, NUM_OF_ROWS, NUM_OF_ENCODERS, EncoderPin, Output, Input>
 where
     [(); NUM_OF_COLS * NUM_OF_ROWS + NUM_OF_ENCODERS]: Sized,
 {
     pub fn new(
         layout: &'a [&[&[Keycode]]],
-        output_pins: &'a mut [DynPin],
-        input_pins: &'a mut [DynPin],
-        encoders: [Encoder; NUM_OF_ENCODERS],
+        output_pins: &'a mut [Output],
+        input_pins: &'a mut [Input],
+        encoders: [Encoder<EncoderPin>; NUM_OF_ENCODERS],
         timer: &'a Timer,
         usb_bus: &'a UsbBusAllocator<UsbBus>,
     ) -> Self {
@@ -62,10 +72,6 @@ where
         self.matrix.initialize();
         // initialize the usb controller
         self.usb.initialize();
-
-        // initialize the encoder controller
-        #[cfg(feature = "encoders")]
-        self.encoder_controller.initialize();
     }
 
     // update the keyboard

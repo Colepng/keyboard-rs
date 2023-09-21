@@ -3,23 +3,36 @@ use embedded_hal::{
     timer::CountDown,
 };
 use fugit::ExtU32;
-use rp2040_hal::{gpio::DynPin, timer::CountDown as RPCountDown, Timer};
+use rp2040_hal::{timer::CountDown as RPCountDown, Timer};
 
 use crate::keycode::Keycode;
 
 use super::State;
 
-pub(super) struct Matrix<'a, const NUM_OF_COLS: usize, const NUM_OF_ROWS: usize> {
+pub(super) struct Matrix<
+    'a,
+    const NUM_OF_COLS: usize,
+    const NUM_OF_ROWS: usize,
+    Output: OutputPin,
+    Input: InputPin,
+> {
     pub state: [[Keycode; NUM_OF_COLS]; NUM_OF_ROWS],
-    output_pins: &'a mut [DynPin],
-    input_pins: &'a mut [DynPin],
+    output_pins: &'a mut [Output],
+    input_pins: &'a mut [Input],
     timer: RPCountDown<'a>,
 }
 
-impl<'a, const NUM_OF_COLS: usize, const NUM_OF_ROWS: usize> Matrix<'a, NUM_OF_COLS, NUM_OF_ROWS> {
+impl<
+        'a,
+        const NUM_OF_COLS: usize,
+        const NUM_OF_ROWS: usize,
+        Output: OutputPin,
+        Input: InputPin,
+    > Matrix<'a, NUM_OF_COLS, NUM_OF_ROWS, Output, Input>
+{
     pub(super) fn new(
-        output_pins: &'a mut [DynPin],
-        input_pins: &'a mut [DynPin],
+        output_pins: &'a mut [Output],
+        input_pins: &'a mut [Input],
         timer: &'a Timer,
     ) -> Self {
         Self {
@@ -31,16 +44,6 @@ impl<'a, const NUM_OF_COLS: usize, const NUM_OF_ROWS: usize> Matrix<'a, NUM_OF_C
     }
 
     pub(super) fn initialize(&mut self) {
-        // initialize output_pins
-        self.output_pins.iter_mut().for_each(|pin| {
-            pin.into_readable_output();
-        });
-
-        // initialize input_pins
-        self.input_pins.iter_mut().for_each(|pin| {
-            pin.into_pull_down_input();
-        });
-
         // initialize scan rate timer
         self.timer.start(10.millis());
     }
@@ -55,13 +58,21 @@ impl<'a, const NUM_OF_COLS: usize, const NUM_OF_ROWS: usize> Matrix<'a, NUM_OF_C
                 .iter_mut()
                 .enumerate()
                 .for_each(|(output_index, output_pin)| {
-                    output_pin.set_high().unwrap();
+                    if output_pin.set_high().is_err() {
+                        panic!("");
+                    }
 
                     self.input_pins
                         .iter_mut()
                         .enumerate()
                         .for_each(|(input_index, input_pin)| {
-                            if input_pin.is_high().unwrap() {
+                            let result: bool;
+                            if let Ok(result1) = input_pin.is_high() {
+                                result = result1;
+                            } else {
+                                panic!()
+                            }
+                            if result {
                                 if !has_changed {
                                     has_changed = true;
                                 }
@@ -87,9 +98,10 @@ impl<'a, const NUM_OF_COLS: usize, const NUM_OF_ROWS: usize> Matrix<'a, NUM_OF_C
                             }
                         });
 
-                    output_pin.set_low().unwrap();
+                    if output_pin.set_low().is_err() {
+                        panic!("");
+                    }
                 });
-
             has_changed
         } else {
             false
