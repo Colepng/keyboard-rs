@@ -5,10 +5,10 @@
 use keyboard_rs::hardware::Encoder;
 use keyboard_rs::keycode::{Keycode, Keycode::*};
 use keyboard_rs::{init, matrix_scaning};
+use rp2040_hal::gpio::{DynPinId, FunctionSio, Pin, PullDown, PullUp, SioInput, SioOutput};
 
 use panic_halt as _;
 use rp_pico::entry;
-use rp_pico::hal::gpio::DynPin;
 
 #[entry]
 fn main() -> ! {
@@ -29,12 +29,14 @@ fn main() -> ! {
 
     let (pins, board) = init();
 
-    let col: &mut [DynPin] = &mut [pins.gpio27.into()];
-    let row: &mut [DynPin] = &mut [pins.gpio18.into()];
+    let col: &mut [Pin<DynPinId, FunctionSio<SioOutput>, PullDown>] =
+        &mut [pins.gpio27.into_push_pull_output().into_dyn_pin()];
+    let row: &mut [Pin<DynPinId, FunctionSio<SioInput>, PullDown>] =
+        &mut [pins.gpio18.into_pull_down_input().into_dyn_pin()];
 
     let encoder = Encoder::new(
-        pins.gpio22.into(),
-        pins.gpio21.into(),
+        pins.gpio22.into_pull_up_input().into_dyn_pin(),
+        pins.gpio21.into_pull_up_input().into_dyn_pin(),
         #[rustfmt::skip]
         &[
             [KC_VOLDOWN, KC_VOLUP],
@@ -42,11 +44,13 @@ fn main() -> ! {
         ],
     );
 
-    matrix_scaning::<NUMOFCOL, NUMOFROW, NUMOFLAYES, NUMOFENCODERS>(
-        board,
-        col,
-        row,
-        KEYS,
-        [encoder],
-    );
+    matrix_scaning::<
+        NUMOFCOL,
+        NUMOFROW,
+        NUMOFLAYES,
+        NUMOFENCODERS,
+        Pin<DynPinId, FunctionSio<SioInput>, PullUp>,
+        Pin<DynPinId, FunctionSio<SioOutput>, PullDown>,
+        Pin<DynPinId, FunctionSio<SioInput>, PullDown>,
+    >(board, col, row, KEYS, [encoder]);
 }

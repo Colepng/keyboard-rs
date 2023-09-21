@@ -5,8 +5,11 @@ use keyboard_rs::keycode::{Keycode, Keycode::*};
 use keyboard_rs::{init, matrix_scaning};
 
 use panic_halt as _;
+use rp2040_hal::gpio::{DynPinId, FunctionSio, Pin, PullDown, SioInput, SioOutput};
 use rp_pico::entry;
-use rp_pico::hal::gpio::DynPin;
+
+type Input = Pin<DynPinId, FunctionSio<SioInput>, PullDown>;
+type Output = Pin<DynPinId, FunctionSio<SioOutput>, PullDown>;
 
 #[entry]
 fn main() -> ! {
@@ -29,8 +32,13 @@ fn main() -> ! {
 
     let (pins, board) = init();
 
-    let col: &mut [DynPin] = &mut [pins.gpio28.into(), pins.gpio26.into(), pins.gpio17.into()];
-    let row: &mut [DynPin] = &mut [pins.gpio16.into(), pins.gpio15.into()];
+    let col: &mut [Output] = &mut [
+        pins.gpio28.into_push_pull_output().into_dyn_pin(),
+        pins.gpio26.into_push_pull_output().into_dyn_pin(),
+        pins.gpio17.into_push_pull_output().into_dyn_pin(),
+    ];
+    let row: &mut [Input] =
+        &mut [pins.gpio16.into_pull_down_input().into_dyn_pin(), pins.gpio15.into_pull_down_input().into_dyn_pin()];
 
-    matrix_scaning::<NUMOFCOL, NUMOFROW, NUMOFLAYES>(board, col, row, KEYS);
+    matrix_scaning::<NUMOFCOL, NUMOFROW, NUMOFLAYES, Output, Input>(board, col, row, KEYS);
 }

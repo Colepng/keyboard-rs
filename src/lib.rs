@@ -18,8 +18,8 @@ use rp2040_hal as hal;
 use rp2040_hal::gpio::Pins;
 use usb_device::class_prelude::UsbBusAllocator;
 
-use embedded_hal::digital::v2::OutputPin;
 use embedded_hal::digital::v2::InputPin;
+use embedded_hal::digital::v2::OutputPin;
 use fugit::ExtU32;
 
 /// External high-speed crystal on the Raspberry Pi Pico board is 12 MHz. Adjust
@@ -108,10 +108,9 @@ where
     let timer = board.timer;
     let usb_bus = board.usb_bus;
 
-    let mut keyboard =
-        Keyboard::<COLS, ROWS, NUM_OF_ENCODERS, EncoderPin, Output, Input>::new(
-            keys, cols, rows, encoders, &timer, &usb_bus,
-        );
+    let mut keyboard = Keyboard::<COLS, ROWS, NUM_OF_ENCODERS, EncoderPin, Output, Input>::new(
+        keys, cols, rows, encoders, &timer, &usb_bus,
+    );
 
     keyboard.initialize();
 
@@ -124,7 +123,13 @@ where
 }
 
 #[cfg(not(feature = "encoders"))]
-pub fn matrix_scaning<const COLS: usize, const ROWS: usize, const LAYERS: usize, Output: OutputPin, Input: InputPin> (
+pub fn matrix_scaning<
+    const COLS: usize,
+    const ROWS: usize,
+    const LAYERS: usize,
+    Output: OutputPin,
+    Input: InputPin,
+>(
     mut board: Board,
     cols: &mut [Output],
     rows: &mut [Input],
@@ -138,7 +143,8 @@ where
     let timer = board.timer;
     let usb_bus = board.usb_bus;
 
-    let mut keyboard = Keyboard::<COLS, ROWS, Output, Input>::new(keys, cols, rows, &timer, &usb_bus);
+    let mut keyboard =
+        Keyboard::<COLS, ROWS, Output, Input>::new(keys, cols, rows, &timer, &usb_bus);
 
     keyboard.initialize();
 
