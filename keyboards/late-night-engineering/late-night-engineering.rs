@@ -7,8 +7,9 @@ use keyboard_rs::keycode::{Keycode, Keycode::*};
 use keyboard_rs::{init, matrix_scaning};
 
 use panic_halt as _;
-use rp_pico::entry;
-use rp_pico::hal::gpio::DynPin;
+use rp2040_hal::entry;
+use rp2040_hal::gpio::PullUp;
+use rp_pico::hal::gpio::{DynPinId, FunctionSio, Pin, PullDown, SioInput, SioOutput};
 
 #[entry]
 fn main() -> ! {
@@ -36,33 +37,33 @@ fn main() -> ! {
 
     let (pins, board) = init();
 
-    let col: &mut [DynPin] = &mut [
-        pins.gpio26.into(),
-        pins.gpio22.into(),
-        pins.gpio16.into(),
-        pins.gpio17.into(),
-        pins.gpio18.into(),
-        pins.gpio19.into(),
-        pins.gpio20.into(),
-        pins.gpio21.into(),
-        pins.gpio10.into(),
-        pins.gpio11.into(),
-        pins.gpio12.into(),
-        pins.gpio13.into(),
-        pins.gpio14.into(),
-        pins.gpio15.into(),
+    let col: &mut [Pin<DynPinId, FunctionSio<SioOutput>, PullDown>] = &mut [
+        pins.gpio26.into_push_pull_output().into_dyn_pin(),
+        pins.gpio22.into_push_pull_output().into_dyn_pin(),
+        pins.gpio16.into_push_pull_output().into_dyn_pin(),
+        pins.gpio17.into_push_pull_output().into_dyn_pin(),
+        pins.gpio18.into_push_pull_output().into_dyn_pin(),
+        pins.gpio19.into_push_pull_output().into_dyn_pin(),
+        pins.gpio20.into_push_pull_output().into_dyn_pin(),
+        pins.gpio21.into_push_pull_output().into_dyn_pin(),
+        pins.gpio10.into_push_pull_output().into_dyn_pin(),
+        pins.gpio11.into_push_pull_output().into_dyn_pin(),
+        pins.gpio12.into_push_pull_output().into_dyn_pin(),
+        pins.gpio13.into_push_pull_output().into_dyn_pin(),
+        pins.gpio14.into_push_pull_output().into_dyn_pin(),
+        pins.gpio15.into_push_pull_output().into_dyn_pin(),
     ];
-    let row: &mut [DynPin] = &mut [
-        pins.gpio28.into(),
-        pins.gpio5.into(),
-        pins.gpio4.into(),
-        pins.gpio3.into(),
-        pins.gpio2.into(),
+    let row: &mut [Pin<DynPinId, FunctionSio<SioInput>, PullDown>] = &mut [
+        pins.gpio28.into_pull_down_input().into_dyn_pin(),
+        pins.gpio5.into_pull_down_input().into_dyn_pin(),
+        pins.gpio4.into_pull_down_input().into_dyn_pin(),
+        pins.gpio3.into_pull_down_input().into_dyn_pin(),
+        pins.gpio2.into_pull_down_input().into_dyn_pin(),
     ];
 
     let encoder1 = Encoder::new(
-        pins.gpio9.into(),
-        pins.gpio8.into(),
+        pins.gpio9.into_pull_up_input().into_dyn_pin(),
+        pins.gpio8.into_pull_up_input().into_dyn_pin(),
         #[rustfmt::skip]
         &[
             [KC_NO, KC_NO],
@@ -71,8 +72,8 @@ fn main() -> ! {
     );
 
     let encoder2 = Encoder::new(
-        pins.gpio7.into(),
-        pins.gpio6.into(),
+        pins.gpio7.into_pull_up_input().into_dyn_pin(),
+        pins.gpio6.into_pull_up_input().into_dyn_pin(),
         #[rustfmt::skip]
         &[
             [KC_MINUS, KEYS_2(&KC_LEFT_SHIFT, &KC_EQUAL)],
@@ -81,8 +82,8 @@ fn main() -> ! {
     );
 
     let encoder3 = Encoder::new(
-        pins.gpio1.into(),
-        pins.gpio0.into(),
+        pins.gpio1.into_pull_up_input().into_dyn_pin(),
+        pins.gpio0.into_pull_up_input().into_dyn_pin(),
         #[rustfmt::skip]
         &[
             [KC_VOLDOWN, KC_VOLUP],
@@ -90,11 +91,13 @@ fn main() -> ! {
         ],
     );
 
-    matrix_scaning::<NUMOFCOL, NUMOFROW, NUMOFLAYES, 3>(
-        board,
-        col,
-        row,
-        KEYS,
-        [encoder1, encoder2, encoder3],
-    );
+    matrix_scaning::<
+        NUMOFCOL,
+        NUMOFROW,
+        NUMOFLAYES,
+        3,
+        Pin<DynPinId, FunctionSio<SioInput>, PullUp>,
+        Pin<DynPinId, FunctionSio<SioOutput>, PullDown>,
+        Pin<DynPinId, FunctionSio<SioInput>, PullDown>,
+    >(board, col, row, KEYS, [encoder1, encoder2, encoder3]);
 }
