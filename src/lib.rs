@@ -124,10 +124,10 @@ where
 }
 
 #[cfg(not(feature = "encoders"))]
-pub fn matrix_scaning<const COLS: usize, const ROWS: usize, const LAYERS: usize>(
+pub fn matrix_scaning<const COLS: usize, const ROWS: usize, const LAYERS: usize, Output: OutputPin, Input: InputPin> (
     mut board: Board,
-    cols: &mut [DynPin],
-    rows: &mut [DynPin],
+    cols: &mut [Output],
+    rows: &mut [Input],
     keys: &[&[&[Keycode]]],
 ) -> !
 where
@@ -138,7 +138,7 @@ where
     let timer = board.timer;
     let usb_bus = board.usb_bus;
 
-    let mut keyboard = Keyboard::<COLS, ROWS>::new(keys, cols, rows, &timer, &usb_bus);
+    let mut keyboard = Keyboard::<COLS, ROWS, Output, Input>::new(keys, cols, rows, &timer, &usb_bus);
 
     keyboard.initialize();
 

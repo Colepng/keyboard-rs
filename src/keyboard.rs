@@ -7,11 +7,13 @@ use usb_device::class_prelude::UsbBusAllocator;
 use crate::hardware::encoder::Encoder;
 use crate::keycode::Keycode;
 
+#[cfg(feature = "encoders")]
 mod encoder_controller;
 mod matrix;
 mod state;
 mod usb;
 
+#[cfg(feature = "encoders")]
 use encoder_controller::EncoderController;
 use matrix::Matrix;
 use state::State;
@@ -109,26 +111,36 @@ where
 }
 
 #[cfg(not(feature = "encoders"))]
-pub struct Keyboard<'a, const NUM_OF_COLS: usize, const NUM_OF_ROWS: usize>
-where
+pub struct Keyboard<
+    'a,
+    const NUM_OF_COLS: usize,
+    const NUM_OF_ROWS: usize,
+    Output: OutputPin,
+    Input: InputPin,
+> where
     [(); NUM_OF_COLS * NUM_OF_ROWS]: Sized,
 {
     state: State<'a, NUM_OF_COLS, NUM_OF_ROWS>,
-    matrix: Matrix<'a, NUM_OF_COLS, NUM_OF_ROWS>,
+    matrix: Matrix<'a, NUM_OF_COLS, NUM_OF_ROWS, Output, Input>,
     usb: Usb<'a>,
-    #[cfg(not(feature = "encoders"))]
     buffer: [Keycode; NUM_OF_COLS * NUM_OF_ROWS],
 }
 
 #[cfg(not(feature = "encoders"))]
-impl<'a, const NUM_OF_COLS: usize, const NUM_OF_ROWS: usize> Keyboard<'a, NUM_OF_COLS, NUM_OF_ROWS>
+impl<
+        'a,
+        const NUM_OF_COLS: usize,
+        const NUM_OF_ROWS: usize,
+        Output: OutputPin,
+        Input: InputPin,
+    > Keyboard<'a, NUM_OF_COLS, NUM_OF_ROWS, Output, Input>
 where
     [(); NUM_OF_COLS * NUM_OF_ROWS]: Sized,
 {
     pub fn new(
         layout: &'a [&[&[Keycode]]],
-        output_pins: &'a mut [DynPin],
-        input_pins: &'a mut [DynPin],
+        output_pins: &'a mut [Output],
+        input_pins: &'a mut [Input],
         timer: &'a Timer,
         usb_bus: &'a UsbBusAllocator<UsbBus>,
     ) -> Self {
