@@ -1,0 +1,8 @@
+[package]
+name = "hardware"
+version = "0.1.0"
+edition = "2021"
+
+[dependencies]
+either = { version = "1.9.0", default-features = false }
+embedded-hal = "0.2.7"
