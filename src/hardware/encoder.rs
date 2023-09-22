@@ -20,7 +20,7 @@ impl<Input: InputPin> Encoder<Input> {
         match self.encoder.direction() {
             Dir::Cw => self.actions[layer][1],
             Dir::Cww => self.actions[layer][0],
-            _ => Keycode::KC_NO,
+            Dir::Same => Keycode::KC_NO,
         }
     }
 

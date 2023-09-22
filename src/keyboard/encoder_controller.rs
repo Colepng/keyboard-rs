@@ -22,7 +22,7 @@ impl<'a, const NUM_OF_ENCODERS: usize, EncoderPin: InputPin>
 
     pub(super) fn periodic(&mut self) {
         self.encoders.iter_mut().for_each(|encoder| {
-            let _ = encoder.update();
+            let () = encoder.update();
         });
     }
 
