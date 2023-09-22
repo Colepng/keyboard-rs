@@ -51,7 +51,9 @@ impl<
     // scans the matrix
     // returns if the matrix has changed
     pub(super) fn scan(&mut self, state: &mut State<NUM_OF_COLS, NUM_OF_ROWS>) -> bool {
-        if !self.should_scan() {
+        if self.should_scan() {
+            false
+        } else {
             let mut has_changed = false;
 
             self.output_pins
@@ -66,35 +68,29 @@ impl<
                         .iter_mut()
                         .enumerate()
                         .for_each(|(input_index, input_pin)| {
-                            let result: bool;
-                            if let Ok(result1) = input_pin.is_high() {
-                                result = result1;
-                            } else {
-                                panic!()
-                            }
-                            if result {
-                                if !has_changed {
-                                    has_changed = true;
-                                }
+                            let mut result: bool = false;
 
+                            input_pin
+                                .is_high()
+                                .map_or_else(|_| panic!(""), |result_input| result = result_input);
+
+                            if !has_changed {
+                                has_changed = true;
+                            }
+
+                            if result {
                                 let key = state.get_key(input_index, output_index);
                                 if self.state[input_index][output_index] != key {
                                     state.on_press(key, input_index, output_index);
                                     self.state[input_index][output_index] = key;
                                 }
-                            } else {
-                                if !has_changed {
-                                    has_changed = true;
-                                }
-
-                                if self.state[input_index][output_index] != Keycode::KC_NO {
-                                    state.on_release(
-                                        self.state[input_index][output_index],
-                                        input_index,
-                                        output_index,
-                                    );
-                                    self.state[input_index][output_index] = Keycode::KC_NO;
-                                }
+                            } else if self.state[input_index][output_index] != Keycode::KC_NO {
+                                state.on_release(
+                                    self.state[input_index][output_index],
+                                    input_index,
+                                    output_index,
+                                );
+                                self.state[input_index][output_index] = Keycode::KC_NO;
                             }
                         });
 
@@ -103,8 +99,6 @@ impl<
                     }
                 });
             has_changed
-        } else {
-            false
         }
     }
 
