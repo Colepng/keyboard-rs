@@ -37,8 +37,10 @@ fn main() -> ! {
         pins.gpio26.into_push_pull_output().into_dyn_pin(),
         pins.gpio17.into_push_pull_output().into_dyn_pin(),
     ];
-    let row: &mut [Input] =
-        &mut [pins.gpio16.into_pull_down_input().into_dyn_pin(), pins.gpio15.into_pull_down_input().into_dyn_pin()];
+    let row: &mut [Input] = &mut [
+        pins.gpio16.into_pull_down_input().into_dyn_pin(),
+        pins.gpio15.into_pull_down_input().into_dyn_pin(),
+    ];
 
     matrix_scaning::<NUMOFCOL, NUMOFROW, NUMOFLAYES, Output, Input>(board, col, row, KEYS);
 }

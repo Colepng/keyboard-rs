@@ -24,8 +24,8 @@ pub enum Dir {
 impl<PinA: InputPin, PinB: InputPin> Encoder<PinA, PinB> {
     const LOOKUP_TABLE: [i8; 16] = [0, -1, 1, 0, 1, 0, 0, -1, -1, 0, 0, 1, 0, 1, -1, 0];
 
-    pub fn new(pin_a: PinA, pin_b: PinB) -> Self {
-        Encoder {
+    pub const fn new(pin_a: PinA, pin_b: PinB) -> Self {
+        Self {
             clk: pin_a,
             dt: pin_b,
             state: 0,
@@ -34,12 +34,19 @@ impl<PinA: InputPin, PinB: InputPin> Encoder<PinA, PinB> {
         }
     }
 
+    /// Returns the update of this [`Encoder<PinA, PinB>`].
+    ///
+    /// # Errors
+    ///
+    /// This function will return an error if either input pins return errors.
     pub fn update(&mut self) -> Result<(), Either<PinA::Error, PinB::Error>> {
         #[rustfmt::skip]
-        let clk: u8 = self.clk.is_high().map_err(Either::Left)? as u8;
-        let dt: u8 = self.dt.is_high().map_err(Either::Right)? as u8;
+        let clk: u8 = u8::from(self.clk.is_high().map_err(Either::Left)?);
+        let dt: u8 = u8::from(self.dt.is_high().map_err(Either::Right)?);
 
         let new_state: u8 = clk << 1 | dt;
+
+        #[allow(clippy::if_not_else)]
         if self.state & 0b0011 != new_state {
             self.state <<= 2;
             self.state |= new_state;
@@ -59,7 +66,7 @@ impl<PinA: InputPin, PinB: InputPin> Encoder<PinA, PinB> {
         Ok(())
     }
 
-    pub fn direction(&self) -> Dir {
+    pub const fn direction(&self) -> Dir {
         self.dir
     }
 }
