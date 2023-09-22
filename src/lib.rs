@@ -1,6 +1,14 @@
 #![no_std]
 #![feature(slice_flatten)]
 #![feature(generic_const_exprs)]
+#![deny(
+    clippy::correctness,
+    clippy::suspicious,
+    clippy::style,
+    clippy::complexity,
+    clippy::nursery,
+    clippy::cargo
+)]
 
 #[cfg(feature = "encoders")]
 pub mod hardware;
@@ -22,7 +30,7 @@ use embedded_hal::digital::v2::InputPin;
 use embedded_hal::digital::v2::OutputPin;
 use fugit::ExtU32;
 
-/// External high-speed crystal on the Raspberry Pi Pico board is 12 MHz. Adjust
+/// External high-speed crystal on the Raspberry Pi Pico board is 12MHz. Adjust
 /// if your board has a different frequency
 const XTAL_FREQ_HZ: u32 = 12_000_000u32;
 // maybe remove the watchdog in the future
@@ -33,6 +41,12 @@ pub struct Board {
     watchdog: Watchdog,
 }
 
+/// .
+///
+/// # Panics
+///
+/// Panics if something goes wrong in setup.
+#[must_use]
 pub fn init() -> (Pins, Board) {
     // setup peripherals
     let mut pac = hal::pac::Peripherals::take().unwrap();
@@ -44,7 +58,7 @@ pub fn init() -> (Pins, Board) {
     // setup serial input/output
     let sio = hal::Sio::new(pac.SIO);
 
-    // setup clock at 125Mhz
+    // setup clock at 125MHz
     let clocks = hal::clocks::init_clocks_and_plls(
         XTAL_FREQ_HZ,
         pac.XOSC,
