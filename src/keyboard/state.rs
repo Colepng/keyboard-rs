@@ -5,7 +5,7 @@ struct Layout<'a> {
 }
 
 impl<'a> Layout<'a> {
-    fn new(layout: &'a [&[&[Keycode]]]) -> Self {
+    const fn new(layout: &'a [&[&[Keycode]]]) -> Self {
         Self { layout }
     }
 }
@@ -13,11 +13,11 @@ impl<'a> Layout<'a> {
 pub(super) struct State<'a, const NUM_OF_COLS: usize, const NUM_OF_ROWS: usize> {
     layout: Layout<'a>,
     layer: usize,
-    override_keys: [[Option<u8>; NUM_OF_COLS]; NUM_OF_ROWS],
+    override_keys: [[Option<usize>; NUM_OF_COLS]; NUM_OF_ROWS],
 }
 
 impl<'a, const NUM_OF_COLS: usize, const NUM_OF_ROWS: usize> State<'a, NUM_OF_COLS, NUM_OF_ROWS> {
-    pub(super) fn new(layout: &'a [&[&[Keycode]]]) -> Self {
+    pub(super) const fn new(layout: &'a [&[&[Keycode]]]) -> Self {
         Self {
             layout: Layout::new(layout),
             layer: 0,
@@ -26,18 +26,17 @@ impl<'a, const NUM_OF_COLS: usize, const NUM_OF_ROWS: usize> State<'a, NUM_OF_CO
     }
 
     pub(super) fn get_key(&self, row: usize, col: usize) -> Keycode {
-        if let Some(layer) = self.override_keys[row][col] {
-            self.layout.layout[layer as usize][row][col]
-        } else {
-            self.layout.layout[self.layer][row][col]
-        }
+        self.override_keys[row][col].map_or_else(
+            || self.layout.layout[self.layer][row][col],
+            |layer| self.layout.layout[layer][row][col],
+        )
     }
 
     // handles special press actions
     pub(super) fn on_press(&mut self, keycode: Keycode, row: usize, col: usize) {
         match keycode {
             Keycode::KC_MO(layer) => {
-                self.override_keys[row][col] = Some(self.layer.clone() as u8);
+                self.override_keys[row][col] = Some(self.layer);
                 self.layer = layer;
             }
             Keycode::KC_LAYER(layer) => self.layer = layer,
@@ -47,16 +46,17 @@ impl<'a, const NUM_OF_COLS: usize, const NUM_OF_ROWS: usize> State<'a, NUM_OF_CO
 
     // handles special release actions
     pub(super) fn on_release(&mut self, keycode: Keycode, row: usize, col: usize) {
+        #[allow(clippy::single_match)]
         match keycode {
             Keycode::KC_MO(_) => {
-                self.layer = self.override_keys[row][col].unwrap() as usize;
+                self.layer = self.override_keys[row][col].unwrap();
                 self.override_keys[row][col] = None;
             }
             _ => {}
         }
     }
 
-    pub(super) fn layer(&self) -> usize {
+    pub(super) const fn layer(&self) -> usize {
         self.layer
     }
 }
