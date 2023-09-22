@@ -5,6 +5,12 @@ members = ["hardware"]
 name = "keyboard"
 version = "0.1.0"
 edition = "2021"
+description = "A keyboard firmware library"
+repository = "https://github.com/Colepng/keyboard-rs"
+readme = "README.md"
+license = "None"
+keywords = ["embedded-hal", "firmware", "keyboard"]
+categories = ["embedded", "no-std", "no-std::no-alloc"]
 
 [features]
 default = []
