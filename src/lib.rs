@@ -9,6 +9,7 @@
     clippy::nursery,
     clippy::cargo
 )]
+#![allow(clippy::multiple_crate_versions)]
 
 #[cfg(feature = "encoders")]
 pub mod hardware;
