@@ -82,12 +82,11 @@ where
             let flatten_state = self.matrix.state.flatten();
             let mut index = 0;
 
-            flatten_state.iter().for_each(|keycode| {
+            for keycode in flatten_state {
                 self.buffer[index] = *keycode;
                 index += 1;
-            });
+            }
 
-            #[cfg(feature = "encoders")]
             self.encoder_controller
                 .encoders_state
                 .iter()
@@ -100,12 +99,10 @@ where
             self.usb.write_consumer_report(&self.buffer);
         }
 
-        #[cfg(feature = "encoders")]
-        {
-            self.encoder_controller.periodic();
-            self.encoder_controller.encoders_state =
-                self.encoder_controller.actions(self.state.layer());
-        }
+        self.encoder_controller.periodic();
+        self.encoder_controller.encoders_state =
+            self.encoder_controller.actions(self.state.layer());
+
         self.usb.periodic();
     }
 }

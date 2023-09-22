@@ -1,3 +1,4 @@
+#[allow(clippy::enum_glob_use)]
 use self::Keycode::*;
 #[derive(Copy, Clone, PartialEq)]
 #[allow(non_camel_case_types, unused)]
@@ -109,7 +110,8 @@ pub enum Keycode {
 }
 
 impl Keycode {
-    pub fn is_consumer(&self) -> bool {
+    #[allow(clippy::must_use_candidate)]
+    pub const fn is_consumer(&self) -> bool {
         matches!(
             self,
             Self::KC_MNEXT
@@ -122,7 +124,8 @@ impl Keycode {
         )
     }
 
-    pub fn into_consumer(&self) -> Option<u16> {
+    #[allow(clippy::must_use_candidate)]
+    pub const fn into_consumer(&self) -> Option<u16> {
         match self {
             Self::KC_MNEXT => Some(0xB5),
             Self::KC_MPREV => Some(0xB6),
