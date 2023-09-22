@@ -21,12 +21,14 @@ use usbd_human_interface_device::{
     UsbHidError,
 };
 
+type HidClass<'a> =
+    UsbHidClass<'a, UsbBus, HList!(ConsumerControl<'a, UsbBus>, NKROBootKeyboard<'a, UsbBus>)>;
+
 use crate::keycode::Keycode;
 
 pub(super) struct Usb<'a> {
     usb_dev: UsbDevice<'a, UsbBus>,
-    usb_hid_class:
-        UsbHidClass<'a, UsbBus, HList!(ConsumerControl<'a, UsbBus>, NKROBootKeyboard<'a, UsbBus>)>,
+    usb_hid_class: HidClass<'a>,
     usb_tick_timer: RPCountDown<'a>,
     last_consumer_report: MultipleConsumerReport,
 }
@@ -70,8 +72,7 @@ impl<'a> Usb<'a> {
         // tick usb class
         if self.usb_tick_timer.wait().is_ok() {
             match self.usb_hid_class.tick() {
-                Err(UsbHidError::WouldBlock) => {}
-                Ok(_) => {}
+                Err(UsbHidError::WouldBlock) | Ok(()) => {}
                 Err(e) => {
                     core::panic!("Failed to process keyboard tick: {:?}", e)
                 }
@@ -85,22 +86,19 @@ impl<'a> Usb<'a> {
                 .device::<NKROBootKeyboard<'_, _>, _>()
                 .read_report()
             {
-                Err(UsbError::WouldBlock) => {
-                    //do nothing
-                }
+                Err(UsbError::WouldBlock) | Ok(_) => {}
                 Err(e) => {
                     core::panic!("Failed to read keyboard report: {:?}", e)
                 }
-                Ok(_) => {}
             }
         }
     }
 
     pub(super) fn write_keyboard_report(&mut self, keys: &[Keycode]) {
         let keyboard = keys
-            .into_iter()
+            .iter()
             .filter(|keycode| !keycode.is_consumer())
-            .map(|keycode| {
+            .flat_map(|keycode| {
                 if let Keycode::KEYS_2(key1, key2) = keycode {
                     [
                         page::Keyboard::from((**key1).try_into().unwrap_or(0)),
@@ -112,17 +110,14 @@ impl<'a> Usb<'a> {
                         page::Keyboard::ErrorUndefine,
                     ]
                 }
-            })
-            .flatten();
+            });
 
         match self
             .usb_hid_class
             .device::<NKROBootKeyboard<'_, _>, _>()
             .write_report(keyboard)
         {
-            Err(UsbHidError::WouldBlock) => {}
-            Err(UsbHidError::Duplicate) => {}
-            Ok(_) => {}
+            Err(UsbHidError::WouldBlock) | Err(UsbHidError::Duplicate) | Ok(_) => {}
             Err(e) => {
                 core::panic!("Failed to write keyboard report: {:?}", e)
             }
@@ -131,7 +126,7 @@ impl<'a> Usb<'a> {
 
     pub(super) fn write_consumer_report(&mut self, keys: &[Keycode]) {
         let mut consumer_array = [page::Consumer::Unassigned; 4];
-        keys.into_iter()
+        keys.iter()
             .filter_map(|keycode| {
                 if keycode.is_consumer() {
                     Some(if let Keycode::KEYS_2(key1, key2) = keycode {
