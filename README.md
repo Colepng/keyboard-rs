@@ -2,7 +2,6 @@
 Keyboard firmware library for rp2040 chips written in rust 
 
 # Todo
-- [ ] abstraction for keycodes - in progress
 - [x] transparent keys
 - [ ] layers
     - [x] switch layers
