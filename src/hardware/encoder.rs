@@ -9,14 +9,14 @@ pub struct Encoder<Input: InputPin> {
 }
 
 impl<Input: InputPin> Encoder<Input> {
-    pub fn new(pin_a: Input, pin_b: Input, actions: &'static [[Keycode; 2]]) -> Self {
+    pub const fn new(pin_a: Input, pin_b: Input, actions: &'static [[Keycode; 2]]) -> Self {
         Self {
             encoder: encoder::Encoder::new(pin_a, pin_b),
             actions,
         }
     }
 
-    pub(crate) fn action(&self, layer: usize) -> Keycode {
+    pub(crate) const fn action(&self, layer: usize) -> Keycode {
         match self.encoder.direction() {
             Dir::Cw => self.actions[layer][1],
             Dir::Cww => self.actions[layer][0],

@@ -17,7 +17,9 @@ mod keyboard;
 pub mod keycode;
 use cortex_m::prelude::{_embedded_hal_watchdog_Watchdog, _embedded_hal_watchdog_WatchdogEnable};
 use hal::usb::UsbBus;
-use hal::{Timer, Watchdog};
+
+#[cfg(feature = "rp2040")]
+use hal::{timer::CountDown as RPCountDown, Watchdog as RPWatchdog, Timer};
 #[cfg(feature = "encoders")]
 use hardware::encoder::Encoder;
 use keyboard::Keyboard;
@@ -29,26 +31,43 @@ use usb_device::class_prelude::UsbBusAllocator;
 
 use embedded_hal::digital::v2::InputPin;
 use embedded_hal::digital::v2::OutputPin;
+use embedded_hal::timer::CountDown;
 use fugit::ExtU32;
 
-/// External high-speed crystal on the Raspberry Pi Pico board is 12MHz. Adjust
-/// if your board has a different frequency
+#[cfg(feature = "rp2040")]
+// External high-speed crystal on the Raspberry Pi Pico board is 12MHz. Adjust
+// if your board has a different frequency
 const XTAL_FREQ_HZ: u32 = 12_000_000u32;
 // maybe remove the watchdog in the future
 
-pub struct Board {
+
+#[cfg(feature = "rp2040")]
+pub struct Board<> {
     usb_bus: UsbBusAllocator<UsbBus>,
-    timer: Timer,
-    watchdog: Watchdog,
+    // pub timer0: Timer,
+    // pub timer1: Timer,
+    watchdog: RPWatchdog,
 }
 
+impl Board {
+    pub fn setup_timers<'a>(timer0: &'a Timer, timer1: &'a Timer) -> (RPCountDown<'a>, RPCountDown<'a>) {
+        let mut timer0 = timer0.count_down();
+        timer0.start(10.millis());
+        let mut timer1 = timer1.count_down();
+        timer1.start(1.millis());
+        (timer0, timer1)
+    }
+}
+
+
+#[cfg(feature = "rp2040")]
 /// .
 ///
 /// # Panics
 ///
 /// Panics if something goes wrong in setup.
 #[must_use]
-pub fn init() -> (Pins, Board) {
+pub fn init() -> (Pins, Board, Timer) {
     // setup peripherals
     let mut pac = hal::pac::Peripherals::take().unwrap();
 
@@ -89,13 +108,12 @@ pub fn init() -> (Pins, Board) {
         &mut pac.RESETS,
     ));
 
+    let board = Board {usb_bus, watchdog};
+
     (
         pins,
-        Board {
-            usb_bus,
-            timer,
-            watchdog,
-        },
+        board,
+        timer,
     )
 }
 
@@ -108,26 +126,26 @@ pub fn matrix_scaning<
     EncoderPin: InputPin,
     Output: OutputPin,
     Input: InputPin,
+    Timer: CountDown,
 >(
     mut board: Board,
     cols: &mut [Output],
     rows: &mut [Input],
     keys: &[&[&[Keycode]]],
     encoders: [Encoder<EncoderPin>; NUM_OF_ENCODERS],
+    mut timer0: Timer,
+    mut timer1: Timer,
 ) -> !
 where
     [(); COLS * ROWS + { NUM_OF_ENCODERS }]: Sized,
 {
     // Set up the USB Communications Class Device driver
 
-    let timer = board.timer;
     let usb_bus = board.usb_bus;
 
-    let mut keyboard = Keyboard::<COLS, ROWS, NUM_OF_ENCODERS, EncoderPin, Output, Input>::new(
-        keys, cols, rows, encoders, &timer, &usb_bus,
+    let mut keyboard = Keyboard::<COLS, ROWS, NUM_OF_ENCODERS, EncoderPin, Output, Input, Timer>::new(
+        keys, cols, rows, encoders, &mut timer0, &mut timer1, &usb_bus,
     );
-
-    keyboard.initialize();
 
     loop {
         // feed watchdog
@@ -144,24 +162,25 @@ pub fn matrix_scaning<
     const LAYERS: usize,
     Output: OutputPin,
     Input: InputPin,
+    Timer: CountDown,
 >(
     mut board: Board,
     cols: &mut [Output],
     rows: &mut [Input],
     keys: &[&[&[Keycode]]],
+    mut timer0: Timer,
+    mut timer1: Timer,
 ) -> !
 where
     [(); COLS * ROWS]: Sized,
 {
     // Set up the USB Communications Class Device driver
 
-    let timer = board.timer;
+    // let timer = board.timer;
     let usb_bus = board.usb_bus;
 
     let mut keyboard =
-        Keyboard::<COLS, ROWS, Output, Input>::new(keys, cols, rows, &timer, &usb_bus);
-
-    keyboard.initialize();
+        Keyboard::<COLS, ROWS, Output, Input, Timer>::new(keys, cols, rows, &mut timer0, &mut timer1, &usb_bus);
 
     loop {
         // feed watchdog

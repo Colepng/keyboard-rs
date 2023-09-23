@@ -10,10 +10,10 @@ pub(super) struct EncoderController<const NUM_OF_ENCODERS: usize, EncoderPin: In
 }
 
 #[cfg(feature = "encoders")]
-impl<'a, const NUM_OF_ENCODERS: usize, EncoderPin: InputPin>
+impl<const NUM_OF_ENCODERS: usize, EncoderPin: InputPin>
     EncoderController<NUM_OF_ENCODERS, EncoderPin>
 {
-    pub(super) fn new(encoders: [Encoder<EncoderPin>; NUM_OF_ENCODERS]) -> Self {
+    pub(super) const fn new(encoders: [Encoder<EncoderPin>; NUM_OF_ENCODERS]) -> Self {
         Self {
             encoders,
             encoders_state: [Keycode::KC_A; NUM_OF_ENCODERS],
@@ -22,7 +22,7 @@ impl<'a, const NUM_OF_ENCODERS: usize, EncoderPin: InputPin>
 
     pub(super) fn periodic(&mut self) {
         self.encoders.iter_mut().for_each(|encoder| {
-            let () = encoder.update();
+            encoder.update();
         });
     }
 

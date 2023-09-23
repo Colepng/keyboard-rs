@@ -1,6 +1,6 @@
 use embedded_hal::digital::v2::{InputPin, OutputPin};
+use embedded_hal::timer::CountDown;
 use rp2040_hal::usb::UsbBus;
-use rp2040_hal::Timer;
 use usb_device::class_prelude::UsbBusAllocator;
 
 #[cfg(feature = "encoders")]
@@ -28,12 +28,13 @@ pub struct Keyboard<
     EncoderPin: InputPin,
     Output: OutputPin,
     Input: InputPin,
+    Timer: CountDown,
 > where
     [(); NUM_OF_COLS * NUM_OF_ROWS + NUM_OF_ENCODERS]: Sized,
 {
     state: State<'a, NUM_OF_COLS, NUM_OF_ROWS>,
-    matrix: Matrix<'a, NUM_OF_COLS, NUM_OF_ROWS, Output, Input>,
-    usb: Usb<'a>,
+    matrix: Matrix<'a, NUM_OF_COLS, NUM_OF_ROWS, Output, Input, Timer>,
+    usb: Usb<'a, Timer>,
     encoder_controller: EncoderController<NUM_OF_ENCODERS, EncoderPin>,
     buffer: [Keycode; NUM_OF_COLS * NUM_OF_ROWS + NUM_OF_ENCODERS],
 }
@@ -47,7 +48,8 @@ impl<
         EncoderPin: InputPin,
         Output: OutputPin,
         Input: InputPin,
-    > Keyboard<'a, NUM_OF_COLS, NUM_OF_ROWS, NUM_OF_ENCODERS, EncoderPin, Output, Input>
+        Timer: CountDown,
+    > Keyboard<'a, NUM_OF_COLS, NUM_OF_ROWS, NUM_OF_ENCODERS, EncoderPin, Output, Input, Timer>
 where
     [(); NUM_OF_COLS * NUM_OF_ROWS + NUM_OF_ENCODERS]: Sized,
 {
@@ -56,25 +58,23 @@ where
         output_pins: &'a mut [Output],
         input_pins: &'a mut [Input],
         encoders: [Encoder<EncoderPin>; NUM_OF_ENCODERS],
-        timer: &'a Timer,
+        timer0: &'a mut Timer,
+        timer1: &'a mut Timer,
         usb_bus: &'a UsbBusAllocator<UsbBus>,
     ) -> Self {
         Self {
             state: State::new(layout),
-            matrix: Matrix::new(output_pins, input_pins, timer),
-            usb: Usb::new(usb_bus, timer),
+            matrix: Matrix::new(output_pins, input_pins, timer0),
+            usb: Usb::new(usb_bus, timer1),
             encoder_controller: EncoderController::new(encoders),
             buffer: [Keycode::KC_NO; NUM_OF_COLS * NUM_OF_ROWS + NUM_OF_ENCODERS],
         }
     }
 
     // initialize the keyboard
-    pub fn initialize(&mut self) {
-        // initialize the matrix
-        self.matrix.initialize();
-        // initialize the usb controller
-        self.usb.initialize();
-    }
+    // pub fn initialize(&mut self) {
+    //     self.matrix = Some(Matrix::new(output_pins, input_pins, &timers[0]));
+    // }
 
     // update the keyboard
     pub fn periodic(&mut self) {
@@ -114,12 +114,13 @@ pub struct Keyboard<
     const NUM_OF_ROWS: usize,
     Output: OutputPin,
     Input: InputPin,
+    Timer: CountDown,
 > where
     [(); NUM_OF_COLS * NUM_OF_ROWS]: Sized,
 {
     state: State<'a, NUM_OF_COLS, NUM_OF_ROWS>,
-    matrix: Matrix<'a, NUM_OF_COLS, NUM_OF_ROWS, Output, Input>,
-    usb: Usb<'a>,
+    matrix: Matrix<'a, NUM_OF_COLS, NUM_OF_ROWS, Output, Input, Timer>,
+    usb: Usb<'a, Timer>,
     buffer: [Keycode; NUM_OF_COLS * NUM_OF_ROWS],
 }
 
@@ -130,7 +131,8 @@ impl<
         const NUM_OF_ROWS: usize,
         Output: OutputPin,
         Input: InputPin,
-    > Keyboard<'a, NUM_OF_COLS, NUM_OF_ROWS, Output, Input>
+        Timer: CountDown,
+    > Keyboard<'a, NUM_OF_COLS, NUM_OF_ROWS, Output, Input, Timer>
 where
     [(); NUM_OF_COLS * NUM_OF_ROWS]: Sized,
 {
@@ -138,24 +140,25 @@ where
         layout: &'a [&[&[Keycode]]],
         output_pins: &'a mut [Output],
         input_pins: &'a mut [Input],
-        timer: &'a Timer,
+        timer0: &'a mut Timer,
+        timer1: &'a mut Timer,
         usb_bus: &'a UsbBusAllocator<UsbBus>,
     ) -> Self {
         Self {
             state: State::new(layout),
-            matrix: Matrix::new(output_pins, input_pins, timer),
-            usb: Usb::new(usb_bus, timer),
+            matrix: Matrix::new(output_pins, input_pins, timer0),
+            usb: Usb::new(usb_bus, timer1),
             buffer: [Keycode::KC_NO; NUM_OF_COLS * NUM_OF_ROWS],
         }
     }
 
     // initialize the keyboard
-    pub fn initialize(&mut self) {
-        // initialize the matrix
-        self.matrix.initialize();
-        // initialize the usb controller
-        self.usb.initialize();
-    }
+    // pub fn initialize(&mut self) {
+    //     // initialize the matrix
+    //     self.matrix.initialize();
+    //     // initialize the usb controller
+    //     self.usb.initialize();
+    // }
 
     // update the keyboard
     pub fn periodic(&mut self) {

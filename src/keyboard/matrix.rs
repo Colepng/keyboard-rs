@@ -2,9 +2,6 @@ use embedded_hal::{
     digital::v2::{InputPin, OutputPin},
     timer::CountDown,
 };
-use fugit::ExtU32;
-use rp2040_hal::{timer::CountDown as RPCountDown, Timer};
-
 use crate::keycode::Keycode;
 
 use super::State;
@@ -15,11 +12,12 @@ pub(super) struct Matrix<
     const NUM_OF_ROWS: usize,
     Output: OutputPin,
     Input: InputPin,
+    Timer: CountDown,
 > {
     pub state: [[Keycode; NUM_OF_COLS]; NUM_OF_ROWS],
     output_pins: &'a mut [Output],
     input_pins: &'a mut [Input],
-    timer: RPCountDown<'a>,
+    timer: &'a mut Timer,
 }
 
 impl<
@@ -28,24 +26,20 @@ impl<
         const NUM_OF_ROWS: usize,
         Output: OutputPin,
         Input: InputPin,
-    > Matrix<'a, NUM_OF_COLS, NUM_OF_ROWS, Output, Input>
+        Timer: CountDown,
+    > Matrix<'a, NUM_OF_COLS, NUM_OF_ROWS, Output, Input, Timer>
 {
     pub(super) fn new(
         output_pins: &'a mut [Output],
         input_pins: &'a mut [Input],
-        timer: &'a Timer,
+        timer: &'a mut Timer,
     ) -> Self {
         Self {
             state: [[Keycode::KC_NO; NUM_OF_COLS]; NUM_OF_ROWS],
             output_pins,
             input_pins,
-            timer: timer.count_down(),
+            timer,
         }
-    }
-
-    pub(super) fn initialize(&mut self) {
-        // initialize scan rate timer
-        self.timer.start(10.millis());
     }
 
     // scans the matrix

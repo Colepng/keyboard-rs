@@ -13,8 +13,9 @@ keywords = ["embedded-hal", "firmware", "keyboard"]
 categories = ["embedded", "no-std", "no-std::no-alloc"]
 
 [features]
-default = []
+default = ["rp2040"]
 encoders = []
+rp2040 = []
 
 [lib]
 name = "keyboard_rs"

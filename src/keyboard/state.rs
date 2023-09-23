@@ -56,6 +56,7 @@ impl<'a, const NUM_OF_COLS: usize, const NUM_OF_ROWS: usize> State<'a, NUM_OF_CO
         }
     }
 
+    #[cfg(feature = "encoders")]
     pub(super) const fn layer(&self) -> usize {
         self.layer
     }

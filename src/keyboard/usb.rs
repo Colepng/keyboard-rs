@@ -1,7 +1,7 @@
 use embedded_hal::timer::CountDown;
 use frunk::HList;
 use fugit::ExtU32;
-use rp2040_hal::{timer::CountDown as RPCountDown, usb::UsbBus, Timer};
+use rp2040_hal::usb::UsbBus;
 use usb_device::{
     class_prelude::UsbBusAllocator,
     prelude::{UsbDevice, UsbDeviceBuilder, UsbVidPid},
@@ -26,15 +26,15 @@ type HidClass<'a> =
 
 use crate::keycode::Keycode;
 
-pub(super) struct Usb<'a> {
+pub(super) struct Usb<'a, Timer: CountDown> {
     usb_dev: UsbDevice<'a, UsbBus>,
     usb_hid_class: HidClass<'a>,
-    usb_tick_timer: RPCountDown<'a>,
+    usb_tick_timer: &'a mut Timer,
     last_consumer_report: MultipleConsumerReport,
 }
 
-impl<'a> Usb<'a> {
-    pub(super) fn new(usb_bus: &'a UsbBusAllocator<UsbBus>, timer: &'a Timer) -> Self {
+impl<'a, Timer: CountDown> Usb<'a, Timer> {
+    pub(super) fn new(usb_bus: &'a UsbBusAllocator<UsbBus>, timer: &'a mut Timer) -> Self {
         let usb_hid_class = UsbHidClassBuilder::new()
             .add_device(NKROBootKeyboardConfig::default())
             .add_device(ConsumerControlConfig::new(
@@ -54,7 +54,7 @@ impl<'a> Usb<'a> {
             .serial_number("1")
             .build();
 
-        let usb_tick_timer = timer.count_down();
+        let usb_tick_timer = timer;
 
         Self {
             usb_dev,
@@ -64,9 +64,8 @@ impl<'a> Usb<'a> {
         }
     }
 
-    pub(super) fn initialize(&mut self) {
-        self.usb_tick_timer.start(1.millis());
-    }
+    // pub(super) fn initialize(&mut self) {
+    // }
 
     pub(super) fn periodic(&mut self) {
         // tick usb class
