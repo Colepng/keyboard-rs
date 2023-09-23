@@ -35,7 +35,6 @@ impl<'a, const NUM_OF_COLS: usize, const NUM_OF_ROWS: usize> State<'a, NUM_OF_CO
                     keycode = self.layout.layout[layer][row][col];
                 }
                 keycode
-
             },
             |layer| self.layout.layout[layer][row][col],
         )
