@@ -4,11 +4,12 @@
 
 use keyboard_rs::hardware::Encoder;
 use keyboard_rs::keycode::{Keycode, Keycode::*};
-use keyboard_rs::{init, matrix_scaning};
+use keyboard_rs::{init, matrix_scaning, Board};
 
 use panic_halt as _;
 use rp2040_hal::entry;
 use rp2040_hal::gpio::PullUp;
+use rp2040_hal::timer::CountDown;
 use rp_pico::hal::gpio::{DynPinId, FunctionSio, Pin, PullDown, SioInput, SioOutput};
 
 #[entry]
@@ -35,7 +36,9 @@ fn main() -> ! {
         ],
     ];
 
-    let (pins, board) = init();
+    let (pins, board, timer) = init();
+    
+    let (timer0, timer1) = Board::setup_timers(&timer, &timer);
 
     let col: &mut [Pin<DynPinId, FunctionSio<SioOutput>, PullDown>] = &mut [
         pins.gpio26.into_push_pull_output().into_dyn_pin(),
@@ -99,5 +102,6 @@ fn main() -> ! {
         Pin<DynPinId, FunctionSio<SioInput>, PullUp>,
         Pin<DynPinId, FunctionSio<SioOutput>, PullDown>,
         Pin<DynPinId, FunctionSio<SioInput>, PullDown>,
-    >(board, col, row, KEYS, [encoder1, encoder2, encoder3]);
+        CountDown,
+    >(board, col, row, KEYS, [encoder1, encoder2, encoder3], timer0, timer1);
 }
