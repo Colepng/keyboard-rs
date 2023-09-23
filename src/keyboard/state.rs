@@ -27,7 +27,16 @@ impl<'a, const NUM_OF_COLS: usize, const NUM_OF_ROWS: usize> State<'a, NUM_OF_CO
 
     pub(super) fn get_key(&self, row: usize, col: usize) -> Keycode {
         self.override_keys[row][col].map_or_else(
-            || self.layout.layout[self.layer][row][col],
+            || {
+                let mut keycode = self.layout.layout[self.layer][row][col];
+                let mut layer = self.layer;
+                while keycode == Keycode::KC_TRANS {
+                    layer -= 1;
+                    keycode = self.layout.layout[layer][row][col];
+                }
+                keycode
+
+            },
             |layer| self.layout.layout[layer][row][col],
         )
     }

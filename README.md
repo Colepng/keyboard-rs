@@ -3,6 +3,7 @@ Keyboard firmware library for rp2040 chips written in rust
 
 # Todo
 - [ ] abstraction for keycodes - in progress
+- [ ] transparent keys
 - [ ] layers
     - [x] switch layers
     - [ ] toggle layers
@@ -12,6 +13,7 @@ Keyboard firmware library for rp2040 chips written in rust
     - [x] multi layer action support
     - [x] multi rotary encoder support
     - [ ] action on holding down and rotating
+- [ ] debounce algorithm
 - [x] NKRO
 - [ ] macros
 - [ ] row2col scanning
