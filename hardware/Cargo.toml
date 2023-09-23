@@ -11,4 +11,4 @@ categories = ["embedded", "no-std", "no-std::no-alloc"]
 
 [dependencies]
 either = { version = "1.9.0", default-features = false }
-embedded-hal = "0.2.7"
+embedded-hal = { version = "0.2.7", features = ["unproven"] }
