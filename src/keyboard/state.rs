@@ -43,11 +43,10 @@ impl<'a, const NUM_OF_COLS: usize, const NUM_OF_ROWS: usize> State<'a, NUM_OF_CO
     // handles special press actions
     pub(super) fn on_press(&mut self, keycode: Keycode, row: usize, col: usize) {
         match keycode {
-            Keycode::KC_MO(layer) => {
+            Keycode::KC_MO(layer) | Keycode::KC_LAYER(layer) => {
                 self.override_keys[row][col] = Some(self.layer);
                 self.layer = layer;
             }
-            Keycode::KC_LAYER(layer) => self.layer = layer,
             _ => {}
         }
     }
@@ -58,6 +57,9 @@ impl<'a, const NUM_OF_COLS: usize, const NUM_OF_ROWS: usize> State<'a, NUM_OF_CO
         match keycode {
             Keycode::KC_MO(_) => {
                 self.layer = self.override_keys[row][col].unwrap();
+                self.override_keys[row][col] = None;
+            }
+            Keycode::KC_LAYER(_) => {
                 self.override_keys[row][col] = None;
             }
             _ => {}
