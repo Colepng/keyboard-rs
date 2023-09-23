@@ -7,9 +7,9 @@ use keyboard_rs::keycode::{Keycode, Keycode::*};
 use keyboard_rs::{init, matrix_scaning, Board};
 
 use panic_halt as _;
-use rp2040_hal::entry;
 use rp2040_hal::gpio::PullUp;
 use rp2040_hal::timer::CountDown;
+use rp2040_hal::{entry, Watchdog};
 use rp_pico::hal::gpio::{DynPinId, FunctionSio, Pin, PullDown, SioInput, SioOutput};
 
 #[entry]
@@ -37,7 +37,7 @@ fn main() -> ! {
     ];
 
     let (pins, board, timer) = init();
-    
+
     let (timer0, timer1) = Board::setup_timers(&timer, &timer);
 
     let col: &mut [Pin<DynPinId, FunctionSio<SioOutput>, PullDown>] = &mut [
@@ -103,5 +103,14 @@ fn main() -> ! {
         Pin<DynPinId, FunctionSio<SioOutput>, PullDown>,
         Pin<DynPinId, FunctionSio<SioInput>, PullDown>,
         CountDown,
-    >(board, col, row, KEYS, [encoder1, encoder2, encoder3], timer0, timer1);
+        Watchdog,
+    >(
+        board,
+        col,
+        row,
+        KEYS,
+        [encoder1, encoder2, encoder3],
+        timer0,
+        timer1,
+    );
 }

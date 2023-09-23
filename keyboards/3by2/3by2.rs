@@ -7,6 +7,7 @@ use keyboard_rs::{init, matrix_scaning, Board};
 use panic_halt as _;
 use rp2040_hal::gpio::{DynPinId, FunctionSio, Pin, PullDown, SioInput, SioOutput};
 use rp2040_hal::timer::CountDown;
+use rp2040_hal::Watchdog;
 use rp_pico::entry;
 
 type Input = Pin<DynPinId, FunctionSio<SioInput>, PullDown>;
@@ -45,5 +46,7 @@ fn main() -> ! {
         pins.gpio15.into_pull_down_input().into_dyn_pin(),
     ];
 
-    matrix_scaning::<NUMOFCOL, NUMOFROW, NUMOFLAYES, Output, Input, CountDown>(board, col, row, KEYS, timer0, timer1);
+    matrix_scaning::<NUMOFCOL, NUMOFROW, NUMOFLAYES, Output, Input, CountDown, Watchdog>(
+        board, col, row, KEYS, timer0, timer1,
+    );
 }
