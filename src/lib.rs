@@ -19,7 +19,7 @@ use cortex_m::prelude::{_embedded_hal_watchdog_Watchdog, _embedded_hal_watchdog_
 use hal::usb::UsbBus;
 
 #[cfg(feature = "rp2040")]
-use hal::{timer::CountDown as RPCountDown, Watchdog as RPWatchdog, Timer};
+use hal::{timer::CountDown as RPCountDown, Timer, Watchdog as RPWatchdog};
 #[cfg(feature = "encoders")]
 use hardware::encoder::Encoder;
 use keyboard::Keyboard;
@@ -40,17 +40,17 @@ use fugit::ExtU32;
 const XTAL_FREQ_HZ: u32 = 12_000_000u32;
 // maybe remove the watchdog in the future
 
-
-#[cfg(feature = "rp2040")]
-pub struct Board<> {
+pub struct Board<Dog: _embedded_hal_watchdog_Watchdog> {
     usb_bus: UsbBusAllocator<UsbBus>,
-    // pub timer0: Timer,
-    // pub timer1: Timer,
-    watchdog: RPWatchdog,
+    watchdog: Dog,
 }
 
-impl Board {
-    pub fn setup_timers<'a>(timer0: &'a Timer, timer1: &'a Timer) -> (RPCountDown<'a>, RPCountDown<'a>) {
+#[cfg(feature = "rp2040")]
+impl Board<rp2040_hal::Watchdog> {
+    pub fn setup_timers<'a>(
+        timer0: &'a Timer,
+        timer1: &'a Timer,
+    ) -> (RPCountDown<'a>, RPCountDown<'a>) {
         let mut timer0 = timer0.count_down();
         timer0.start(10.millis());
         let mut timer1 = timer1.count_down();
@@ -59,7 +59,6 @@ impl Board {
     }
 }
 
-
 #[cfg(feature = "rp2040")]
 /// .
 ///
@@ -67,7 +66,7 @@ impl Board {
 ///
 /// Panics if something goes wrong in setup.
 #[must_use]
-pub fn init() -> (Pins, Board, Timer) {
+pub fn init() -> (Pins, Board<RPWatchdog>, Timer) {
     // setup peripherals
     let mut pac = hal::pac::Peripherals::take().unwrap();
 
@@ -108,13 +107,9 @@ pub fn init() -> (Pins, Board, Timer) {
         &mut pac.RESETS,
     ));
 
-    let board = Board {usb_bus, watchdog};
+    let board = Board { usb_bus, watchdog };
 
-    (
-        pins,
-        board,
-        timer,
-    )
+    (pins, board, timer)
 }
 
 #[cfg(feature = "encoders")]
@@ -127,8 +122,9 @@ pub fn matrix_scaning<
     Output: OutputPin,
     Input: InputPin,
     Timer: CountDown,
+    Dog: _embedded_hal_watchdog_Watchdog,
 >(
-    mut board: Board,
+    mut board: Board<Dog>,
     cols: &mut [Output],
     rows: &mut [Input],
     keys: &[&[&[Keycode]]],
@@ -143,9 +139,16 @@ where
 
     let usb_bus = board.usb_bus;
 
-    let mut keyboard = Keyboard::<COLS, ROWS, NUM_OF_ENCODERS, EncoderPin, Output, Input, Timer>::new(
-        keys, cols, rows, encoders, &mut timer0, &mut timer1, &usb_bus,
-    );
+    let mut keyboard =
+        Keyboard::<COLS, ROWS, NUM_OF_ENCODERS, EncoderPin, Output, Input, Timer>::new(
+            keys,
+            cols,
+            rows,
+            encoders,
+            &mut timer0,
+            &mut timer1,
+            &usb_bus,
+        );
 
     loop {
         // feed watchdog
@@ -163,8 +166,9 @@ pub fn matrix_scaning<
     Output: OutputPin,
     Input: InputPin,
     Timer: CountDown,
+    Dog: _embedded_hal_watchdog_Watchdog,
 >(
-    mut board: Board,
+    mut board: Board<Dog>,
     cols: &mut [Output],
     rows: &mut [Input],
     keys: &[&[&[Keycode]]],
@@ -179,8 +183,14 @@ where
     // let timer = board.timer;
     let usb_bus = board.usb_bus;
 
-    let mut keyboard =
-        Keyboard::<COLS, ROWS, Output, Input, Timer>::new(keys, cols, rows, &mut timer0, &mut timer1, &usb_bus);
+    let mut keyboard = Keyboard::<COLS, ROWS, Output, Input, Timer>::new(
+        keys,
+        cols,
+        rows,
+        &mut timer0,
+        &mut timer1,
+        &usb_bus,
+    );
 
     loop {
         // feed watchdog

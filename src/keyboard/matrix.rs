@@ -1,8 +1,8 @@
+use crate::keycode::Keycode;
 use embedded_hal::{
     digital::v2::{InputPin, OutputPin},
     timer::CountDown,
 };
-use crate::keycode::Keycode;
 
 use super::State;
 
