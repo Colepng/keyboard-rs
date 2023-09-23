@@ -15,38 +15,40 @@
 pub mod hardware;
 mod keyboard;
 pub mod keycode;
-use cortex_m::prelude::{_embedded_hal_watchdog_Watchdog, _embedded_hal_watchdog_WatchdogEnable};
-use hal::usb::UsbBus;
 
-#[cfg(feature = "rp2040")]
-use hal::{timer::CountDown as RPCountDown, Timer, Watchdog as RPWatchdog};
+use cortex_m::prelude::{_embedded_hal_watchdog_Watchdog, _embedded_hal_watchdog_WatchdogEnable};
+use embedded_hal::digital::v2::InputPin;
+use embedded_hal::digital::v2::OutputPin;
+use embedded_hal::timer::CountDown;
 #[cfg(feature = "encoders")]
 use hardware::encoder::Encoder;
 use keyboard::Keyboard;
 use keycode::Keycode;
 use panic_halt as _;
-use rp2040_hal as hal;
-use rp2040_hal::gpio::Pins;
+use usb_device::class_prelude::UsbBus;
 use usb_device::class_prelude::UsbBusAllocator;
 
-use embedded_hal::digital::v2::InputPin;
-use embedded_hal::digital::v2::OutputPin;
-use embedded_hal::timer::CountDown;
-use fugit::ExtU32;
-
 #[cfg(feature = "rp2040")]
+use fugit::ExtU32;
+#[cfg(feature = "rp2040")]
+use hal::{timer::CountDown as RPCountDown, Timer, Watchdog as RPWatchdog};
+#[cfg(feature = "rp2040")]
+use rp2040_hal as hal;
+#[cfg(feature = "rp2040")]
+use rp2040_hal::gpio::Pins;
+
 // External high-speed crystal on the Raspberry Pi Pico board is 12MHz. Adjust
 // if your board has a different frequency
 const XTAL_FREQ_HZ: u32 = 12_000_000u32;
 // maybe remove the watchdog in the future
 
-pub struct Board<Dog: _embedded_hal_watchdog_Watchdog> {
-    usb_bus: UsbBusAllocator<UsbBus>,
+pub struct Board<Dog: _embedded_hal_watchdog_Watchdog, Usb: UsbBus> {
+    usb_bus: Usb,
     watchdog: Dog,
 }
 
 #[cfg(feature = "rp2040")]
-impl Board<rp2040_hal::Watchdog> {
+impl Board<rp2040_hal::Watchdog, rp2040_hal::usb::UsbBus> {
     pub fn setup_timers<'a>(
         timer0: &'a Timer,
         timer1: &'a Timer,
@@ -66,7 +68,7 @@ impl Board<rp2040_hal::Watchdog> {
 ///
 /// Panics if something goes wrong in setup.
 #[must_use]
-pub fn init() -> (Pins, Board<RPWatchdog>, Timer) {
+pub fn init() -> (Pins, Board<RPWatchdog, rp2040_hal::usb::UsbBus>, Timer) {
     // setup peripherals
     let mut pac = hal::pac::Peripherals::take().unwrap();
 
@@ -99,13 +101,13 @@ pub fn init() -> (Pins, Board<RPWatchdog>, Timer) {
         &mut pac.RESETS,
     );
 
-    let usb_bus = UsbBusAllocator::new(hal::usb::UsbBus::new(
+    let usb_bus = hal::usb::UsbBus::new(
         pac.USBCTRL_REGS,
         pac.USBCTRL_DPRAM,
         clocks.usb_clock,
         true,
         &mut pac.RESETS,
-    ));
+    );
 
     let board = Board { usb_bus, watchdog };
 
@@ -123,8 +125,9 @@ pub fn matrix_scaning<
     Input: InputPin,
     Timer: CountDown,
     Dog: _embedded_hal_watchdog_Watchdog,
+    Usb: UsbBus,
 >(
-    mut board: Board<Dog>,
+    mut board: Board<Dog, Usb>,
     cols: &mut [Output],
     rows: &mut [Input],
     keys: &[&[&[Keycode]]],
@@ -137,10 +140,10 @@ where
 {
     // Set up the USB Communications Class Device driver
 
-    let usb_bus = board.usb_bus;
+    let usb_bus = UsbBusAllocator::new(board.usb_bus);
 
     let mut keyboard =
-        Keyboard::<COLS, ROWS, NUM_OF_ENCODERS, EncoderPin, Output, Input, Timer>::new(
+        Keyboard::<COLS, ROWS, NUM_OF_ENCODERS, EncoderPin, Output, Input, Timer, Usb>::new(
             keys,
             cols,
             rows,
@@ -167,8 +170,9 @@ pub fn matrix_scaning<
     Input: InputPin,
     Timer: CountDown,
     Dog: _embedded_hal_watchdog_Watchdog,
+    Usb: UsbBus,
 >(
-    mut board: Board<Dog>,
+    mut board: Board<Dog, Usb>,
     cols: &mut [Output],
     rows: &mut [Input],
     keys: &[&[&[Keycode]]],
@@ -181,9 +185,9 @@ where
     // Set up the USB Communications Class Device driver
 
     // let timer = board.timer;
-    let usb_bus = board.usb_bus;
+    let usb_bus = UsbBusAllocator::new(board.usb_bus);
 
-    let mut keyboard = Keyboard::<COLS, ROWS, Output, Input, Timer>::new(
+    let mut keyboard = Keyboard::<COLS, ROWS, Output, Input, Timer, Usb>::new(
         keys,
         cols,
         rows,

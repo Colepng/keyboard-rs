@@ -1,7 +1,6 @@
 use embedded_hal::digital::v2::{InputPin, OutputPin};
 use embedded_hal::timer::CountDown;
-use rp2040_hal::usb::UsbBus;
-use usb_device::class_prelude::UsbBusAllocator;
+use usb_device::class_prelude::{UsbBus as UsbBusTrait, UsbBusAllocator};
 
 #[cfg(feature = "encoders")]
 use crate::hardware::encoder::Encoder;
@@ -29,12 +28,13 @@ pub struct Keyboard<
     Output: OutputPin,
     Input: InputPin,
     Timer: CountDown,
+    UsbBus: UsbBusTrait,
 > where
     [(); NUM_OF_COLS * NUM_OF_ROWS + NUM_OF_ENCODERS]: Sized,
 {
     state: State<'a, NUM_OF_COLS, NUM_OF_ROWS>,
     matrix: Matrix<'a, NUM_OF_COLS, NUM_OF_ROWS, Output, Input, Timer>,
-    usb: Usb<'a, Timer>,
+    usb: Usb<'a, Timer, UsbBus>,
     encoder_controller: EncoderController<NUM_OF_ENCODERS, EncoderPin>,
     buffer: [Keycode; NUM_OF_COLS * NUM_OF_ROWS + NUM_OF_ENCODERS],
 }
@@ -49,7 +49,19 @@ impl<
         Output: OutputPin,
         Input: InputPin,
         Timer: CountDown,
-    > Keyboard<'a, NUM_OF_COLS, NUM_OF_ROWS, NUM_OF_ENCODERS, EncoderPin, Output, Input, Timer>
+        UsbBus: UsbBusTrait,
+    >
+    Keyboard<
+        'a,
+        NUM_OF_COLS,
+        NUM_OF_ROWS,
+        NUM_OF_ENCODERS,
+        EncoderPin,
+        Output,
+        Input,
+        Timer,
+        UsbBus,
+    >
 where
     [(); NUM_OF_COLS * NUM_OF_ROWS + NUM_OF_ENCODERS]: Sized,
 {
@@ -115,12 +127,13 @@ pub struct Keyboard<
     Output: OutputPin,
     Input: InputPin,
     Timer: CountDown,
+    UsbBus: UsbBusTrait,
 > where
     [(); NUM_OF_COLS * NUM_OF_ROWS]: Sized,
 {
     state: State<'a, NUM_OF_COLS, NUM_OF_ROWS>,
     matrix: Matrix<'a, NUM_OF_COLS, NUM_OF_ROWS, Output, Input, Timer>,
-    usb: Usb<'a, Timer>,
+    usb: Usb<'a, Timer, UsbBus>,
     buffer: [Keycode; NUM_OF_COLS * NUM_OF_ROWS],
 }
 
@@ -132,7 +145,8 @@ impl<
         Output: OutputPin,
         Input: InputPin,
         Timer: CountDown,
-    > Keyboard<'a, NUM_OF_COLS, NUM_OF_ROWS, Output, Input, Timer>
+        UsbBus: UsbBusTrait,
+    > Keyboard<'a, NUM_OF_COLS, NUM_OF_ROWS, Output, Input, Timer, UsbBus>
 where
     [(); NUM_OF_COLS * NUM_OF_ROWS]: Sized,
 {
