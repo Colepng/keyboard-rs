@@ -8,6 +8,7 @@ use panic_halt as _;
 use rp2040_hal::gpio::{DynPinId, FunctionSio, Pin, PullDown, SioInput, SioOutput};
 use rp2040_hal::timer::CountDown;
 use rp2040_hal::Watchdog;
+use rp2040_hal::usb::UsbBus;
 use rp_pico::entry;
 
 type Input = Pin<DynPinId, FunctionSio<SioInput>, PullDown>;
@@ -46,7 +47,7 @@ fn main() -> ! {
         pins.gpio15.into_pull_down_input().into_dyn_pin(),
     ];
 
-    matrix_scaning::<NUMOFCOL, NUMOFROW, NUMOFLAYES, Output, Input, CountDown, Watchdog>(
+    matrix_scaning::<NUMOFCOL, NUMOFROW, NUMOFLAYES, Output, Input, CountDown, Watchdog, UsbBus>(
         board, col, row, KEYS, timer0, timer1,
     );
 }

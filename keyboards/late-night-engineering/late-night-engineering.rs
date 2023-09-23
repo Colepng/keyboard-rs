@@ -9,6 +9,7 @@ use keyboard_rs::{init, matrix_scaning, Board};
 use panic_halt as _;
 use rp2040_hal::gpio::PullUp;
 use rp2040_hal::timer::CountDown;
+use rp2040_hal::usb::UsbBus;
 use rp2040_hal::{entry, Watchdog};
 use rp_pico::hal::gpio::{DynPinId, FunctionSio, Pin, PullDown, SioInput, SioOutput};
 
@@ -104,6 +105,7 @@ fn main() -> ! {
         Pin<DynPinId, FunctionSio<SioInput>, PullDown>,
         CountDown,
         Watchdog,
+        UsbBus,
     >(
         board,
         col,

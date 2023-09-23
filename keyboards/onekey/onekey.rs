@@ -10,6 +10,7 @@ use rp2040_hal::Watchdog;
 
 use panic_halt as _;
 use rp2040_hal::timer::CountDown;
+use rp2040_hal::usb::UsbBus;
 use rp_pico::entry;
 
 #[entry]
@@ -58,5 +59,6 @@ fn main() -> ! {
         Pin<DynPinId, FunctionSio<SioInput>, PullDown>,
         CountDown,
         Watchdog,
+        UsbBus,
     >(board, col, row, KEYS, [encoder], timer0, timer1);
 }
