@@ -3,7 +3,7 @@ Keyboard firmware library for rp2040 chips written in rust
 
 # Todo
 - [ ] abstraction for keycodes - in progress
-- [ ] transparent keys
+- [x] transparent keys
 - [ ] layers
     - [x] switch layers
     - [ ] toggle layers
@@ -17,11 +17,11 @@ Keyboard firmware library for rp2040 chips written in rust
 - [x] NKRO
 - [ ] macros
 - [ ] row2col scanning
-- [ ] duplex matrix scanning
-- [ ] square / round-robin matrix scanning
 - [ ] mouse keys
 - [ ] oled display support
 - [ ] led support
+- [ ] duplex matrix scanning
+- [ ] square / round-robin matrix scanning
 
 # Example warnings
 both onekey and late-night-engineering need the encoders feature to be enabled when building.

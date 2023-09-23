@@ -2,7 +2,7 @@
 name = "hardware"
 version = "0.1.0"
 edition = "2021"
-description = "A crate for basic hardware"
+description = "A crate for basic platform-agnostic hardware"
 repository = "https://github.com/Colepng/keyboard-rs"
 readme = "README.md"
 license = "None"
