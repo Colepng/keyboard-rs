@@ -1,5 +1,5 @@
 use either::Either;
-use embedded_hal::digital::v2::InputPin;
+use embedded_hal::digital::InputPin;
 
 pub struct Encoder<PinA, PinB> {
     clk: PinA,
@@ -7,11 +7,6 @@ pub struct Encoder<PinA, PinB> {
     state: u8,
     pulses: i8,
     dir: Dir,
-}
-
-pub enum Error<Error1, Error2> {
-    Error1(Error1),
-    Error2(Error2),
 }
 
 #[derive(Clone, Copy)]
