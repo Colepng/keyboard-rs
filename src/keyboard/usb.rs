@@ -2,9 +2,7 @@ use embedded_hal::timer::CountDown;
 use frunk::HList;
 use fugit::ExtU32;
 use usb_device::{
-    class_prelude::{UsbBus as UsbBusTrait, UsbBusAllocator},
-    prelude::{UsbDevice, UsbDeviceBuilder, UsbVidPid},
-    UsbError,
+    class_prelude::{UsbBus as UsbBusTrait, UsbBusAllocator}, device::StringDescriptors, prelude::{UsbDevice, UsbDeviceBuilder, UsbVidPid}, LangID, UsbError
 };
 use usbd_human_interface_device::{
     device::{
@@ -47,10 +45,13 @@ impl<'a, Timer: CountDown, UsbBus: UsbBusTrait> Usb<'a, Timer, UsbBus> {
             ))
             .build(usb_bus);
 
-        let usb_dev = UsbDeviceBuilder::new(usb_bus, UsbVidPid(0x1209, 0x0001))
+        let strings = StringDescriptors::new(LangID::EN_CA)
             .manufacturer("Cole corp")
             .product("Keyboard, Keyboard Conusmer")
-            .serial_number("1")
+            .serial_number("1");
+
+        let usb_dev = UsbDeviceBuilder::new(usb_bus, UsbVidPid(0x1209, 0x0001))
+            .strings(&[strings]).expect("Too many langs")
             .build();
 
         let usb_tick_timer = timer;

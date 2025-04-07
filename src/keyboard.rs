@@ -72,11 +72,12 @@ where
         encoders: [Encoder<EncoderPin>; NUM_OF_ENCODERS],
         timer0: &'a mut Timer,
         timer1: &'a mut Timer,
+        timer2: &'a mut Timer,
         usb_bus: &'a UsbBusAllocator<UsbBus>,
     ) -> Self {
         Self {
             state: State::new(layout),
-            matrix: Matrix::new(output_pins, input_pins, timer0),
+            matrix: Matrix::new(output_pins, input_pins, timer0, timer2),
             usb: Usb::new(usb_bus, timer1),
             encoder_controller: EncoderController::new(encoders),
             buffer: [Keycode::KC_NO; NUM_OF_COLS * NUM_OF_ROWS + NUM_OF_ENCODERS],
@@ -89,9 +90,9 @@ where
     // }
 
     // update the keyboard
-    pub fn periodic(&mut self) {
+    pub fn periodic(&mut self) where Timer::Time: From<fugit::Duration<u32, 1, 1000000>> {
         if self.matrix.scan(&mut self.state) {
-            let flatten_state = self.matrix.state.flatten();
+            let flatten_state = self.matrix.state.iter().flatten();
             let mut index = 0;
 
             for keycode in flatten_state {
@@ -177,10 +178,10 @@ where
     // update the keyboard
     pub fn periodic(&mut self) {
         if self.matrix.scan(&mut self.state) {
-            let flatten_state = self.matrix.state.flatten();
+            let flatten_state = self.matrix.state.iter().flatten();
             let mut index = 0;
 
-            flatten_state.iter().for_each(|keycode| {
+            flatten_state.for_each(|keycode| {
                 self.buffer[index] = *keycode;
                 index += 1;
             });

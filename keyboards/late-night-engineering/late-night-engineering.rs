@@ -114,5 +114,6 @@ fn main() -> ! {
         [encoder1, encoder2, encoder3],
         timer0,
         timer1,
+        timer.count_down(),
     );
 }

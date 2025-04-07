@@ -1,7 +1,8 @@
+use core::prelude::rust_2024::*;
 use either::Either;
-use embedded_hal::digital::InputPin;
+use embedded_hal::digital::v2::InputPin;
 
-pub struct Encoder<PinA, PinB> {
+pub struct Encoder<PinA: InputPin, PinB: InputPin> {
     clk: PinA,
     dt: PinB,
     state: u8,
@@ -9,7 +10,7 @@ pub struct Encoder<PinA, PinB> {
     dir: Dir,
 }
 
-#[derive(Clone, Copy)]
+#[derive(Clone, Copy, PartialEq, Eq, Debug)]
 pub enum Dir {
     Cw,
     Cww,
@@ -65,3 +66,59 @@ impl<PinA: InputPin, PinB: InputPin> Encoder<PinA, PinB> {
         self.dir
     }
 }
+
+// mod test {
+//     use embedded_hal::{digital::v2::InputPin, digital::v2::{ErrorType, Error}};
+//
+//     use crate::encoder::Dir;
+//
+//     use super::Encoder;
+//
+//     struct FakeInputPin {
+//         state: bool
+//     }
+//
+//     impl FakeInputPin {
+//         fn new(state: bool) -> Self {
+//             Self {
+//                 state,
+//             }
+//         }
+//
+//         fn set_state(&mut self, state: bool) {
+//             self.state = state;
+//         }
+//     }
+//
+//     #[derive(Debug)]
+//     struct CantError;
+//
+//     impl Error for CantError {
+//         fn kind(&self) -> embedded_hal::digital::ErrorKind {
+//             embedded_hal::digital::ErrorKind::Other
+//         }
+//     }
+//
+//     impl ErrorType for FakeInputPin {
+//         type Error = CantError;
+//     }
+//
+//     impl InputPin for FakeInputPin {
+//         fn is_high(&mut self) -> Result<bool, Self::Error> {
+//             Ok(self.state == true)
+//         }
+//
+//         fn is_low(&mut self) -> Result<bool, Self::Error> {
+//             Ok(self.state == false)
+//         }
+//     }
+//
+//     fn test() {
+//         let pin_a = FakeInputPin::new(false);
+//         let pin_b = FakeInputPin::new(false);
+//
+//         let encoder = Encoder::new(pin_a, pin_b);
+//
+//         assert_eq!(encoder.direction(), Dir::Same);
+//     }
+// }

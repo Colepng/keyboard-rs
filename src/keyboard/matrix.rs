@@ -1,4 +1,4 @@
-use crate::keycode::Keycode;
+use crate::{debounce::debounce_countdown, keycode::Keycode};
 use embedded_hal::{
     digital::v2::{InputPin, OutputPin},
     timer::CountDown,
@@ -18,6 +18,7 @@ pub(super) struct Matrix<
     output_pins: &'a mut [Output],
     input_pins: &'a mut [Input],
     timer: &'a mut Timer,
+    timer_debounce: &'a mut Timer,
 }
 
 impl<
@@ -29,22 +30,24 @@ impl<
         Timer: CountDown,
     > Matrix<'a, NUM_OF_COLS, NUM_OF_ROWS, Output, Input, Timer>
 {
-    pub(super) fn new(
+    pub(super) const fn new(
         output_pins: &'a mut [Output],
         input_pins: &'a mut [Input],
         timer: &'a mut Timer,
+        timer_debounce: &'a mut Timer,
     ) -> Self {
         Self {
             state: [[Keycode::KC_NO; NUM_OF_COLS]; NUM_OF_ROWS],
             output_pins,
             input_pins,
             timer,
+            timer_debounce,
         }
     }
 
     // scans the matrix
     // returns if the matrix has changed
-    pub(super) fn scan(&mut self, state: &mut State<NUM_OF_COLS, NUM_OF_ROWS>) -> bool {
+    pub(super) fn scan(&mut self, state: &mut State<NUM_OF_COLS, NUM_OF_ROWS>) -> bool where Timer::Time: From<fugit::Duration<u32, 1, 1000000>> {
         if self.should_scan() {
             false
         } else {
@@ -64,9 +67,13 @@ impl<
                         .for_each(|(input_index, input_pin)| {
                             let mut result: bool = false;
 
-                            input_pin
-                                .is_high()
-                                .map_or_else(|_| panic!(""), |result_input| result = result_input);
+                            if input_pin.is_high().is_ok() {
+                                result = debounce_countdown(|| input_pin.is_high().map_or_else(|_| panic!("error is high"), |i| i), self.timer_debounce);
+                            }
+
+                            // input_pin
+                            //     .is_high()
+                            //     .map_or_else(|_| panic!(""), |result_input| result = result_input);
 
                             if !has_changed {
                                 has_changed = true;

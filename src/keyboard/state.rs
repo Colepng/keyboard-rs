@@ -41,7 +41,7 @@ impl<'a, const NUM_OF_COLS: usize, const NUM_OF_ROWS: usize> State<'a, NUM_OF_CO
     }
 
     // handles special press actions
-    pub(super) fn on_press(&mut self, keycode: Keycode, row: usize, col: usize) {
+    pub(super) const fn on_press(&mut self, keycode: Keycode, row: usize, col: usize) {
         match keycode {
             Keycode::KC_MO(layer) | Keycode::KC_LAYER(layer) => {
                 self.override_keys[row][col] = Some(self.layer);
@@ -52,7 +52,7 @@ impl<'a, const NUM_OF_COLS: usize, const NUM_OF_ROWS: usize> State<'a, NUM_OF_CO
     }
 
     // handles special release actions
-    pub(super) fn on_release(&mut self, keycode: Keycode, row: usize, col: usize) {
+    pub(super) const fn on_release(&mut self, keycode: Keycode, row: usize, col: usize) {
         #[allow(clippy::single_match)]
         match keycode {
             Keycode::KC_MO(_) => {

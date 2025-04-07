@@ -1,5 +1,4 @@
 #![no_std]
-#![feature(slice_flatten)]
 #![feature(generic_const_exprs)]
 #![deny(
     clippy::correctness,
@@ -9,14 +8,14 @@
     clippy::nursery,
     clippy::cargo
 )]
-#![allow(clippy::multiple_crate_versions)]
 
 #[cfg(feature = "encoders")]
 pub mod hardware;
 mod keyboard;
 pub mod keycode;
+pub mod debounce;
 
-use cortex_m::prelude::{_embedded_hal_watchdog_Watchdog, _embedded_hal_watchdog_WatchdogEnable};
+use cortex_m::prelude::_embedded_hal_watchdog_Watchdog;
 use embedded_hal::digital::v2::InputPin;
 use embedded_hal::digital::v2::OutputPin;
 use embedded_hal::timer::CountDown;
@@ -134,9 +133,10 @@ pub fn matrix_scaning<
     encoders: [Encoder<EncoderPin>; NUM_OF_ENCODERS],
     mut timer0: Timer,
     mut timer1: Timer,
+    mut timer2: Timer,
 ) -> !
 where
-    [(); COLS * ROWS + { NUM_OF_ENCODERS }]: Sized,
+    [(); COLS * ROWS + { NUM_OF_ENCODERS }]: Sized, Timer::Time: From<fugit::Duration<u32, 1, 1000000>>
 {
     // Set up the USB Communications Class Device driver
 
@@ -150,6 +150,7 @@ where
             encoders,
             &mut timer0,
             &mut timer1,
+            &mut timer2,
             &usb_bus,
         );
 
